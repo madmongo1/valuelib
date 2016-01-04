@@ -1,7 +1,9 @@
 set(PUBLIC_HEADERS
    ${PUBLIC_HEADERS}
    ${CMAKE_CURRENT_LIST_FILE}
-   ${CMAKE_CURRENT_SOURCE_DIR}/string_traits.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/string_traits.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/string_algorithm.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/shared_string.hpp
    PARENT_SCOPE
 )
 

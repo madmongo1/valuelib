@@ -29,15 +29,9 @@ namespace value {
 
 		template<class T> using ValueType = typename deduce_value_type<T>::type;
 
-		template<bool condition> using EnableIf = std::enable_if_t<condition>*;
+		template<bool condition> using EnableIf = std::enable_if_t<condition>;
 
 
 
-		template<class String, EnableIf< IsModelOfString<String> > = nullptr>
-		typename String::size_type
-		find(String& s, const ValueType<String>& str, typename String::size_type pos = 0)
-		{
-			return s.find(str, pos);
-		} 
 	}
 }
