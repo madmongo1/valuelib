@@ -1,4 +1,5 @@
 build/
+dependencies/
 
 # Compiled Object files
 *.slo
