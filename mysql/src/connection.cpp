@@ -77,7 +77,17 @@ namespace value  { namespace mysql {
     
     
     
-    auto connection::get_impl(const connection_invariants& params) -> impl_ptr
+    //
+    // implement outer class
+    //
+    
+    connection::connection(const connection_invariants& params)
+    : _impl(acquire_impl(params))
+    {
+        
+    }
+
+    auto connection::acquire_impl(const connection_invariants& params) -> impl_ptr
     {
         using namespace std;
         
@@ -112,6 +122,8 @@ namespace value  { namespace mysql {
         
     }
     
+    
+
     
 }}
 

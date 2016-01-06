@@ -34,6 +34,16 @@ namespace value  { namespace mysql {
     
     struct connection
     {
+        template<class...Args, std::enable_if_t<AreAllConnectionArguments<Args...>>* = nullptr >
+        connection(Args&&...args)
+        : connection {
+            connection_invariants {
+                std::forward_as_tuple(std::forward<Args>(args)...)
+            }
+        }
+        {
+        }
+        
         connection(const connection_invariants& params);
 
         
@@ -42,7 +52,7 @@ namespace value  { namespace mysql {
     private:
         struct impl;
         using impl_ptr = impl*;
-        static auto get_impl(const connection_invariants& params) -> impl_ptr;
+        static auto acquire_impl(const connection_invariants& params) -> impl_ptr;
         impl_ptr _impl;
     };
     

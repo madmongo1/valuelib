@@ -44,11 +44,11 @@ namespace value { namespace mysql {
             }
         }
         
-        std::string client_flags_as_text(unsigned long flags)
+        std::string for_print(const client_options& options)
         {
             using namespace std;
             ostringstream ss;
-            ss << hex << flags;
+            ss << hex << options;
             return ss.str();
         }
 
@@ -65,7 +65,7 @@ namespace value { namespace mysql {
         os << ", db=" << quoted(for_print(_default_schema));
         os << ", port=" << _port;
         os << ", unix_socket=" << quoted(for_print(_unix_socket));
-        os << ", flags=" << client_flags_as_text(_client_flag);
+        os << ", flags=" << for_print(_client_flag);
         
         os << " }";
         return os;
@@ -106,5 +106,23 @@ namespace value { namespace mysql {
     {
         return _client_flag;
     }
+    
+    connection_invariants::client_option_builder::client_option_builder() noexcept
+    : _options(CLIENT_MULTI_STATEMENTS | CLIENT_MULTI_RESULTS)
+    {
+    }
+    
+    connection_invariants::client_option_builder::operator client_options() const
+    {
+        return _options;
+    }
+    
+    std::string to_string(const connection_invariants& ci)
+    {
+        std::ostringstream ss;
+        ss << ci;
+        return ss.str();
+    }
+
     
 }}
