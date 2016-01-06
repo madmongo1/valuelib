@@ -10,10 +10,10 @@ namespace value { namespace mysql {
     
     namespace {
         template<class Tag>
-        const char* ptr_or_null(const boost::optional<tagged_value<std::string, Tag>>& opt)
+        const char* ptr_or_null(const optional<tagged_value<std::string, Tag>>& opt)
         {
             if (opt) {
-                return opt.get().c_str();
+                return opt->c_str();
             }
             else {
                 return nullptr;
@@ -21,10 +21,10 @@ namespace value { namespace mysql {
         }
         
         template<class Tag>
-        auto for_print(const boost::optional<tagged_value<std::string, Tag>>& opt)
+        auto for_print(const optional<tagged_value<std::string, Tag>>& opt)
         {
             if (opt) {
-                return opt.get();
+                return *opt;
             }
             else {
                 static const tagged_value<std::string, Tag> tag("{null}");
@@ -32,7 +32,7 @@ namespace value { namespace mysql {
             }
         }
         
-        auto for_print(const boost::optional<password>& opt)
+        auto for_print(const optional<password>& opt)
         {
             if (opt) {
                 static const password stars("******");

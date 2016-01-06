@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <boost/optional.hpp>
 #include <utility>
 #include <type_traits>
 
@@ -20,6 +19,7 @@ namespace value { namespace mysql {
     {
         using T::T;
         using tag_type = Tag;
+        using underlying_type = T;
     };
     
     template<class Type, class Tag>

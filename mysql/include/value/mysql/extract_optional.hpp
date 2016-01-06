@@ -1,7 +1,8 @@
 #pragma once
 
 #include <utility>
-#include <boost/optional.hpp>
+#include <tuple>
+#include <value/mysql/optional.hpp>
 
 namespace value { namespace mysql {
     
@@ -27,9 +28,9 @@ namespace value { namespace mysql {
             std::is_same<Type, Reduce< std::tuple_element_t<N, Tuple> > >::value
             >* = nullptr
             >
-            boost::optional<Type> operator()(Tuple&& t) const
+            optional<Type> operator()(Tuple&& t) const
             {
-                return boost::optional<Type>(std::get<N>(std::forward<Tuple>(t)));
+                return optional<Type>(std::get<N>(std::forward<Tuple>(t)));
             }
             
             template<
@@ -39,7 +40,7 @@ namespace value { namespace mysql {
             not std::is_same<Type, Reduce< std::tuple_element_t<N, Tuple> >>::value
             >* = nullptr
             >
-            boost::optional<Type> operator()(Tuple&& t) const
+            optional<Type> operator()(Tuple&& t) const
             {
                 return optional_extracter<Type, N + 1, TupleSize>()(std::forward<Tuple>(t));
             }
@@ -50,15 +51,15 @@ namespace value { namespace mysql {
         struct optional_extracter<Type, N, N>
         {
             template<class Tuple>
-            boost::optional<Type> operator()(Tuple&&) const {
-                return { boost::none };
+            optional<Type> operator()(Tuple&&) const {
+                return { nullopt };
             }
         };
         
     }
     
     template<class Type, class Tuple>
-    boost::optional<Type> extract_optional(Tuple&& t)
+    optional<Type> extract_optional(Tuple&& t)
     {
         static constexpr size_t size = std::tuple_size<std::decay_t<Tuple>>()();
         return detail::optional_extracter<Type, 0, size>()(std::forward<Tuple>(t));

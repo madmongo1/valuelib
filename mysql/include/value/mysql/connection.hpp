@@ -1,11 +1,11 @@
 #pragma once
 
 #include <value/mysql/types.hpp>
+#include <value/mysql/optional.hpp>
 #include <value/mysql/connection_invariants.hpp>
 
 #include <string>
 #include <boost/variant.hpp>
-#include <boost/optional.hpp>
 #include <typeinfo>
 
 namespace value  { namespace mysql {

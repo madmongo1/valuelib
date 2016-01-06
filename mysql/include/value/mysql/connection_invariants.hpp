@@ -3,7 +3,6 @@
 #include <value/mysql/types.hpp>
 #include <value/mysql/extract_optional.hpp>
 
-#include <boost/optional.hpp>
 #include <tuple>
 #include <ostream>
 
@@ -40,21 +39,21 @@ namespace value { namespace mysql {
         : connection_invariants(std::forward_as_tuple(std::forward<Args>(args)...))
         {}
         
-        static port default_port(boost::optional<port>&& p) {
+        static port default_port(optional<port>&& p) {
             if (p) {
-                return p.get();
+                return *p;
             }
             else {
                 return port(0);
             }
         }
         
-        boost::optional<host> _host;
-        boost::optional<username> _user;
-        boost::optional<password> _pwd;
-        boost::optional<schema> _default_schema;
+        optional<host> _host;
+        optional<username> _user;
+        optional<password> _pwd;
+        optional<schema> _default_schema;
         port _port;
-        boost::optional<unix_socket> _unix_socket;
+        optional<unix_socket> _unix_socket;
         client_options _client_flag;
         
         auto to_tuple() const {

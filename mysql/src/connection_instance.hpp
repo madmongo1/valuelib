@@ -1,12 +1,12 @@
 #pragma once
 
 #include <value/mysql/types.hpp>
+#include <value/mysql/optional.hpp>
 #include <mysql.h>
 
 #include <value/mysql/connection_invariants.hpp>
 #include "error.hpp"
 
-#include <boost/optional.hpp>
 
 namespace value { namespace mysql {
 
