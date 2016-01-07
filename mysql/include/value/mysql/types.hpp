@@ -117,6 +117,8 @@ namespace value { namespace mysql {
     
     using blob_data = std::vector<std::uint8_t>;
     using field_data = boost::variant<std::string, blob_data, float, double, long, unsigned long, bool>;
+    std::string to_string(const field_data& fd);
+    std::string to_string(field_data&& fd);
     
 
 }}

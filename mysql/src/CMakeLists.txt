@@ -18,6 +18,9 @@ set(PRIVATE_SOURCE
 
     ${CMAKE_CURRENT_SOURCE_DIR}/dynamic_buffer.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dynamic_buffer.cpp
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/field_data.cpp
+
     ${CMAKE_CURRENT_SOURCE_DIR}/result_binder.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/result_binder.cpp
 
