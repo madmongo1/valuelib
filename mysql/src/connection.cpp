@@ -1,16 +1,18 @@
 #include <value/mysql/connection.hpp>
 #include <value/mysql/connection_invariants.hpp>
 
+#include "connection_impl.hpp"
+#include "connection_instance.hpp"
+#include "error.hpp"
+
 #include <mysql.h>
+
 #include <deque>
 #include <map>
 #include <exception>
 #include <stdexcept>
 #include <set>
 
-#include "error.hpp"
-#include "connection_instance.hpp"
-#include "connection_pool.hpp"
 
 
 namespace value  { namespace mysql {
@@ -60,20 +62,6 @@ namespace value  { namespace mysql {
     
     
     
-    struct connection::impl
-    {
-        impl(const connection_invariants& params)
-        : _params(params)
-        {}
-        
-        const connection_invariants& params() const {
-            return _params;
-        }
-        
-    private:
-        connection_invariants _params;
-        connection_pool _connection_pool;
-    };
     
     
     
@@ -86,6 +74,13 @@ namespace value  { namespace mysql {
     {
         
     }
+    
+    connection_instance connection::acquire_connection_instance(transaction_access_key)
+    {
+        return _impl->acquire_connection_instance();
+    }
+    
+
 
     auto connection::acquire_impl(const connection_invariants& params) -> impl_ptr
     {

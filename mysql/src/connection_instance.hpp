@@ -13,18 +13,18 @@ namespace value { namespace mysql {
     
     struct connection_instance
     {
-        connection_instance(const host& host,
-                            port port,
-                            const username& user,
-                            const password& password,
-                            const schema& default_schema);
+        struct pool;
         
-        connection_instance(const connection_invariants& invariants);
+        struct impl;
+        using impl_ptr = std::shared_ptr<impl>;
+        
+        class create_from_impl {
+            create_from_impl() {}
+            friend pool;
+        };
 
-        connection_instance(const connection_instance&) = delete;
-        connection_instance& operator=(const connection_instance&) = delete;
-        
-        ~connection_instance() noexcept;
+        connection_instance(const connection_invariants& invariants);
+        connection_instance(create_from_impl, impl_ptr);
         
         auto close() noexcept -> void;
         
@@ -33,8 +33,11 @@ namespace value { namespace mysql {
         /// as to whether the server is still there at the time of the ping.
         auto pings_ok() noexcept -> bool;
         
-        MYSQL _mysql;
-        bool _need_close = false;
+        MYSQL* mysql() const;
+
+    private:
+        
+        impl_ptr _impl;
     };
     
 

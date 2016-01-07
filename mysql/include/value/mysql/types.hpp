@@ -3,6 +3,11 @@
 #include <string>
 #include <utility>
 #include <type_traits>
+#include <vector>
+#include <string>
+#include <cstdint>
+
+#include <boost/variant.hpp>
 
 namespace value { namespace mysql {
 
@@ -97,6 +102,21 @@ namespace value { namespace mysql {
     template<class...Args>
     static constexpr bool AreAllConnectionArguments = are_all_connection_arguments<Reduce<Args>...>::value;
     
+    
+    //
+    // an argument type to inhibit the throwing of exceptions
+    //
+    
+    struct without_exception_t {};
+    static constexpr auto without_exception = without_exception_t {};
+    
+    
+    //
+    // a variant type to hold field data
+    //
+    
+    using blob_data = std::vector<std::uint8_t>;
+    using field_data = boost::variant<std::string, blob_data, float, double, long, unsigned long, bool>;
     
 
 }}

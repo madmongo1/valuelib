@@ -3,6 +3,7 @@
 #include <value/mysql/types.hpp>
 #include <value/mysql/optional.hpp>
 #include <value/mysql/connection_invariants.hpp>
+#include <value/mysql/transaction.hpp>
 
 #include <string>
 #include <boost/variant.hpp>
@@ -16,21 +17,11 @@ namespace value  { namespace mysql {
         
     };
     
-    struct statement {
-        
-        template<class Arg> statement& set_param(size_t index, Arg&& arg);
-        template<class...Args> statement& set_params(size_t index, Args&&...args);
-        
-    };
-    
-    struct transaction
-    {
-        struct statement statement();
-    };
     
     
     
     
+    struct connection_instance;
     
     struct connection
     {
@@ -49,11 +40,25 @@ namespace value  { namespace mysql {
         
         struct transaction transaction();
         
+        
+        
+        // private implementation
     private:
         struct impl;
         using impl_ptr = impl*;
         static auto acquire_impl(const connection_invariants& params) -> impl_ptr;
         impl_ptr _impl;
+        
+        // internal interface
+    public:
+        class transaction_access_key {
+            constexpr transaction_access_key() {};
+            friend struct transaction;
+        };
+        
+        connection_instance acquire_connection_instance(transaction_access_key);
+        
+
     };
     
 }}
