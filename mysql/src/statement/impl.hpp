@@ -27,7 +27,7 @@ namespace value { namespace mysql {
         using metadata_ptr = std::unique_ptr<MYSQL_RES, free_helper>;
         using result_ptr = std::unique_ptr<MYSQL_RES, free_helper>;
         
-        static auto build_statement(const struct transaction& trans) -> statement_ptr;
+        static auto build_statement(const shared_mysql_ptr& mysql) -> statement_ptr;
         
         static constexpr size_t count_parameter_markers(const char* from, const char* to)
         {
@@ -40,9 +40,10 @@ namespace value { namespace mysql {
             return count;
         }
         
-        impl(transaction trans, const std::string& sql)
-        : _trans(std::move(trans))
-        , _stmt(build_statement(_trans))
+        impl(connection con, const std::string& sql)
+        : _connection(std::move(con))
+        , _mysql(_connection.mysql())
+        , _stmt(build_statement(_mysql))
         , _parameter_count(mysql_stmt_param_count(_stmt.get()))
         {
             
@@ -95,7 +96,9 @@ namespace value { namespace mysql {
         
     private:
         
-        transaction _trans;
+        connection _connection;
+        shared_mysql_ptr _mysql;
+        
         bind_ptr _bind_params = nullptr;
         statement_ptr _stmt;
         size_t _parameter_count = 0;

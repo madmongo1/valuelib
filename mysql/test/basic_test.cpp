@@ -48,13 +48,13 @@ struct exception_printer
             print_exception(os, e, level+1);
         } catch(...) {}
     }
-
+    
     std::ostream& operator()(std::ostream& os) const
     {
         print_exception(os, *pe);
         return os;
     }
-
+    
 private:
     const std::exception* pe;
 };
@@ -84,24 +84,23 @@ TEST(localConnectionTest, query)
                                                    value::mysql::password("value_mysql_test_password"),
                                                    value::mysql::schema("value_mysql_test"));
         
-        auto trans = make_transaction(connection);
-        auto stmt = make_statement(trans, "SELECT * FROM customers");
+        auto stmt = make_statement(connection, "SELECT * FROM customers");
         std::cout << stmt << std::endl;
         stmt.execute();
         
-//        const auto& fields = stmt.fields();
-/*
-        for (auto& result_set : results)
-        {
-            for (const auto& field : result_set.fields()) {
-        
-            }
-            for (auto& row : result_set.sequential_rows())
-            {
-                
-            }
-        }
-*/
+        //        const auto& fields = stmt.fields();
+        /*
+         for (auto& result_set : results)
+         {
+         for (const auto& field : result_set.fields()) {
+         
+         }
+         for (auto& row : result_set.sequential_rows())
+         {
+         
+         }
+         }
+         */
         
         
     }
@@ -114,21 +113,23 @@ TEST(localConnectionTest, query)
 
 TEST(localConnectionTest, connectionLimitTest)
 {
-    std::vector<value::mysql::transaction> transactions;
+    std::vector<value::mysql::connection> connections;
     try {
         
-        auto connection = value::mysql::connection(value::mysql::host("localhost"),
-                                                   value::mysql::username("value_mysql_test"),
-                                                   value::mysql::password("value_mysql_test_password"));
-
-        while(transactions.size() < 3000)
-            transactions.push_back(make_transaction(connection));
+        while(connections.size() < 3000)
+        {
+            auto connection = value::mysql::connection(value::mysql::host("localhost"),
+                                                       value::mysql::username("value_mysql_test"),
+                                                       value::mysql::password("value_mysql_test_password"));
+            
+            connections.push_back(std::move(connection));
+        }
         
     }
     catch(const std::exception& e)
     {
     }
-    EXPECT_LT(transactions.size(), 2000);
-    EXPECT_GT(transactions.size(), 10);
+    EXPECT_LT(connections.size(), 2000);
+    EXPECT_GT(connections.size(), 10);
     
 }

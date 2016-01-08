@@ -1,19 +1,17 @@
 #include "impl.hpp"
 
-#include "connection_instance.hpp"
 #include <iostream>
 
 namespace value { namespace mysql {
 
     auto
     statement::impl::
-    build_statement(const struct transaction& trans) -> statement_ptr
+    build_statement(const shared_mysql_ptr& mysql) -> statement_ptr
     try
     {
-        auto mysql = trans.connection_instance().mysql();
-        auto ptr = mysql_stmt_init(mysql);
+        auto ptr = mysql_stmt_init(mysql.get());
         if (!ptr) {
-            throw_database_error(mysql);
+            throw_error(mysql);
         }
         
         return {

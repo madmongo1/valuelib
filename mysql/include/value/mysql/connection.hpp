@@ -1,9 +1,9 @@
 #pragma once
 
 #include <value/mysql/types.hpp>
+#include <value/mysql/mysql_api.hpp>
 #include <value/mysql/optional.hpp>
 #include <value/mysql/connection_invariants.hpp>
-#include <value/mysql/transaction.hpp>
 
 #include <string>
 #include <boost/variant.hpp>
@@ -17,12 +17,7 @@ namespace value  { namespace mysql {
         
     };
     
-    
-    
-    
-    
-    struct connection_instance;
-    
+
     struct connection
     {
         template<class...Args, std::enable_if_t<AreAllConnectionArguments<Args...>>* = nullptr >
@@ -36,29 +31,30 @@ namespace value  { namespace mysql {
         }
         
         connection(const connection_invariants& params);
+        
+        auto begin_transaction() -> void;
+        auto commit(bool reopen = false) -> void;
+        auto rollback() -> void;
+        auto rollback(without_exception_t) noexcept -> void;
+        
 
         
-        struct transaction transaction();
-        
-        
+        shared_mysql_ptr mysql() const;
         
         // private implementation
     private:
+        struct library_initialiser;
+        static library_initialiser& acquire_library();
+
         struct impl;
-        using impl_ptr = impl*;
-        static auto acquire_impl(const connection_invariants& params) -> impl_ptr;
+        using impl_ptr = std::shared_ptr<impl>;
+        impl_ptr make_impl(connection_parameters params);
         impl_ptr _impl;
         
-        // internal interface
     public:
-        class transaction_access_key {
-            constexpr transaction_access_key() {};
-            friend struct transaction;
-        };
+        struct transaction_sentinel;
+        transaction_sentinel get_transaction_sentinel();
         
-        connection_instance acquire_connection_instance(transaction_access_key);
-        
-
     };
     
 }}

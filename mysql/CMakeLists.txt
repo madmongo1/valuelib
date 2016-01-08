@@ -29,6 +29,7 @@ PUBLIC
 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
 $<INSTALL_INTERFACE:include/valuelib/database>
+${MYSQL_INCLUDE_DIR}
 PRIVATE
 ${CMAKE_CURRENT_SOURCE_DIR}/src
 ${CMAKE_CURRENT_BINARY_DIR}/src
@@ -36,7 +37,6 @@ ${CMAKE_CURRENT_BINARY_DIR}/src
 target_include_directories(mysql
 SYSTEM BEFORE PRIVATE
 ${Boost_INCLUDE_DIR}
-${MYSQL_INCLUDE_DIR}
 )
 target_link_libraries(mysql ${MYSQL_LIBRARIES} ${Boost_LIBRARIES})
 message(SYSTEM " libs: " ${Boost_LIBRARIES})

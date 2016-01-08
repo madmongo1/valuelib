@@ -89,4 +89,7 @@ namespace value { namespace mysql {
     
     std::size_t hash_code(const connection_invariants& r);
     
+    
+    using connection_parameters = connection_invariants;
+    
 }}

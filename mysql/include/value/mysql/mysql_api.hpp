@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <exception>
 
-#include <mysql.h>
 
 #include "error.hpp"
 #include "connection_invariants.hpp"
@@ -34,7 +33,7 @@ namespace value { namespace mysql {
     
     using mysql_ptr = std::unique_ptr<MYSQL, auto_free>;
     using shared_mysql_ptr = std::shared_ptr<MYSQL>;
-    
+        
     using result_ptr = std::unique_ptr<MYSQL_RES, auto_free>;
     using shared_result_ptr = std::shared_ptr<MYSQL_RES>;
     using statement_ptr = std::unique_ptr<MYSQL_STMT, auto_free>;
@@ -60,6 +59,7 @@ namespace value { namespace mysql {
     }
     
     mysql_ptr connect(const connection_invariants& ci);
+    void connect(MYSQL* mysql, const connection_invariants& ci);
     
     bool ping_query(const mysql_ptr& ptr) noexcept;
     
@@ -91,6 +91,32 @@ namespace value { namespace mysql {
         finished,
         truncated
     };
+    
+    inline void begin_transaction(const shared_mysql_ptr& mysql)
+    {
+        (0 == mysql_autocommit(mysql.get(), 0))
+        or throw_error(mysql);
+    }
+    
+    inline void commit(const shared_mysql_ptr& mysql, bool reopen = false)
+    {
+        (0 == mysql_commit(mysql.get()))
+        or throw_error(mysql);
+        
+        if (not reopen) {
+            (0 == mysql_autocommit(mysql.get(), 1))
+            or throw_error(mysql);
+        }
+    }
+    
+    inline void rollback(const shared_mysql_ptr& mysql)
+    {
+        (0 == mysql_rollback(mysql.get()))
+        or throw_error(mysql);
+
+        (0 == mysql_autocommit(mysql.get(), 1))
+        or throw_error(mysql);
+    }
     
     inline fetch_result fetch_next(MYSQL_STMT* stmt)
     try

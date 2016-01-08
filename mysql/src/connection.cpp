@@ -1,11 +1,12 @@
 #include <value/mysql/connection.hpp>
 #include <value/mysql/connection_invariants.hpp>
+#include <value/mysql/statement.hpp>
 
-#include "connection_impl.hpp"
-#include "connection_instance.hpp"
+#include "connection/impl.hpp"
 #include "error.hpp"
 
 #include <mysql.h>
+#include <value/mysql/mysql_api.hpp>
 
 #include <deque>
 #include <map>
@@ -15,9 +16,10 @@
 
 
 
+
 namespace value  { namespace mysql {
     
-    struct library_initialiser
+    struct connection::library_initialiser
     {
         library_initialiser()
         {
@@ -57,9 +59,6 @@ namespace value  { namespace mysql {
     
     
     
-    using physical_connection_pool = std::deque<connection_instance>;
-    using physical_connection_map = std::map<connection_invariants, physical_connection_pool>;
-    
     
     
     
@@ -69,54 +68,77 @@ namespace value  { namespace mysql {
     // implement outer class
     //
     
+    auto connection::acquire_library() -> library_initialiser&
+    {
+        static library_initialiser _ {};
+        return _;
+    }
+    
+    auto connection::make_impl(connection_parameters params) -> impl_ptr
+    {
+        acquire_library();
+        return std::make_shared<impl>(std::move(params));
+    }
+    
     connection::connection(const connection_invariants& params)
-    : _impl(acquire_impl(params))
+    : _impl(std::make_shared<impl>(std::move(params)))
     {
         
     }
     
-    connection_instance connection::acquire_connection_instance(transaction_access_key)
+    shared_mysql_ptr connection::mysql() const
     {
-        return _impl->acquire_connection_instance();
+        return { _impl, static_cast<MYSQL*>(_impl.get()) };
     }
     
-
-
-    auto connection::acquire_impl(const connection_invariants& params) -> impl_ptr
+    auto connection::begin_transaction() -> void
+    try
     {
+        using ::value::mysql::begin_transaction;
+        
+        begin_transaction(_impl);
+    }
+    catch(...) {
         using namespace std;
-        
-        struct params_less {
-            bool operator()(const impl& l, const impl& r) const {
-                return l.params() < r.params();
-            }
-            bool operator()(const impl& l, const connection_invariants& r) const {
-                return l.params() < r;
-            }
-            bool operator()(const connection_invariants& l, const impl& r) const {
-                return l < r.params();
-            }
-            bool operator()(const connection_invariants& l, const connection_invariants& r) const {
-                return l < r;
-            }
-        };
-        
-        static library_initialiser lib_init;
-        static mutex cache_mutex;
-        using impl_cache_type = map<connection_invariants, shared_ptr<impl>>;
-        static impl_cache_type impl_cache;
-        
-        lock_guard<mutex> lock(cache_mutex);
-        
-        auto it = impl_cache.find(params);
-        if (it == impl_cache.end()) {
-            it = impl_cache.emplace_hint(it, params, make_shared<impl>(params));
-        }
-        
-        return std::addressof(*(it->second));
-        
+        throw_with_nested(runtime_error(__func__));
     }
     
+    auto connection::commit(bool reopen) -> void
+    try
+    {
+        using ::value::mysql::commit;
+        commit(_impl, reopen);
+    }
+    catch(...) {
+        using namespace std;
+        throw_with_nested(runtime_error(__func__));
+    }
+    
+    auto connection::rollback() -> void
+    try
+    {
+        using ::value::mysql::rollback;
+        rollback(_impl);
+    }
+    catch(...) {
+        using namespace std;
+        throw_with_nested(runtime_error(__func__));
+    }
+    
+    auto connection::rollback(without_exception_t without) noexcept -> void
+    {
+        try {
+            using ::value::mysql::rollback;
+            rollback(_impl);
+        }
+        catch(...)
+        {
+            
+        }
+    }
+    
+
+
     
 
     

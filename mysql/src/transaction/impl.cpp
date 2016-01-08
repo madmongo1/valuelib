@@ -1,35 +1,32 @@
 #include "impl.hpp"
-#include "connection_instance.hpp"
-
+#include <value/mysql/mysql_api.hpp>
 
 namespace value { namespace mysql {
 
-    transaction::impl::impl(struct connection conn)
-    : _connection(std::move(conn))
-    , _instance(_connection.acquire_connection_instance(connection::transaction_access_key()))
+    transaction::impl::impl(struct connection con)
+    : _connection(std::move(con))
     {
+//        _connection.increase_transaction_count();
+        _notified = true;
+        
+    }
+    
+    transaction::impl::~impl()
+    {
+//        if (_notified)
+//            _connection.decrease_transaction_count();
     }
     
     void transaction::impl::rollback()
     {
-        
+        _connection.rollback();
     }
     
-    void transaction::impl::rollback(without_exception_t) noexcept
+    void transaction::impl::rollback(without_exception_t without_exception) noexcept
     {
-        if (_transaction_open) {
-            mysql_rollback(_instance.mysql());
-            _transaction_open = false;
-        }
-        
+        _connection.rollback(without_exception);
     }
 
-    transaction::impl::~impl()
-    {
-        if (_transaction_open) {
-            rollback(without_exception);
-        }
-    }
     
 
 }}

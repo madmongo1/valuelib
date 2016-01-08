@@ -1,9 +1,6 @@
 #include <value/mysql/transaction.hpp>
 #include <value/mysql/connection.hpp>
 
-#include "connection_impl.hpp"
-#include "connection_instance.hpp"
-
 #include "transaction/impl.hpp"
 
 #include <mysql.h>
@@ -16,23 +13,9 @@ namespace value { namespace mysql {
     // transaction
     //
     
-    transaction::transaction(struct connection conn)
-    : _impl(std::make_shared<impl>(std::move(conn)))
-    {}
-    
-    auto transaction::implementation() const -> impl&
+    transaction::transaction(struct connection con)
+    : _impl_ptr(std::make_shared<impl>(std::move(con)))
     {
-        return *_impl;
-    }
-    
-    auto transaction::connection() const -> const struct connection&
-    {
-        return _impl->connection();
-    }
-
-    struct connection_instance& transaction::connection_instance() const
-    {
-        return _impl->connection_instance();
     }
 
     
@@ -40,7 +23,7 @@ namespace value { namespace mysql {
     // free functions
     //
     
-    transaction make_transaction(connection conn)
+    transaction make_transaction(const connection& conn)
     {
         return transaction(std::move(conn));
     }

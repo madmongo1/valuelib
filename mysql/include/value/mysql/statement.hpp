@@ -5,7 +5,7 @@
 namespace value { namespace mysql {
 
     struct execution_result;
-    struct transaction;
+    struct connection;
     
     struct result_set;
     
@@ -24,7 +24,7 @@ namespace value { namespace mysql {
 
 	struct statement
 	{
-        statement(transaction, const std::string& sql);
+        statement(connection con, const std::string& sql);
 
         struct sequential {};
         struct random_access {};
@@ -44,7 +44,7 @@ namespace value { namespace mysql {
     
     std::ostream& operator<<(std::ostream& os, const statement& stmt);
     
-    statement make_statement(transaction trans, const std::string& sql);
+    statement make_statement(connection conn, const std::string& sql);
     
 
     

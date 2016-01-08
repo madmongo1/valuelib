@@ -1,3 +1,4 @@
+add_subdirectory(connection)
 add_subdirectory(transaction)
 add_subdirectory(statement)
 
@@ -5,15 +6,7 @@ set(PRIVATE_SOURCE
    ${PRIVATE_SOURCE}
     ${CMAKE_CURRENT_LIST_FILE}
     ${CMAKE_CURRENT_SOURCE_DIR}/connection.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/connection_impl.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/connection_impl.cpp
 
-    ${CMAKE_CURRENT_SOURCE_DIR}/connection_instance.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/connection_instance.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/connection_instance_impl.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/connection_instance_impl.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/connection_instance_pool.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/connection_instance_pool.hpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/connection_invariants.cpp
 
