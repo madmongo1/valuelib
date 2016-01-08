@@ -87,8 +87,21 @@ TEST(localConnectionTest, query)
         auto trans = make_transaction(connection);
         auto stmt = make_statement(trans, "SELECT * FROM customers");
         std::cout << stmt << std::endl;
-        auto results = stmt.execute().results();
+        stmt.execute();
         
+//        const auto& fields = stmt.fields();
+/*
+        for (auto& result_set : results)
+        {
+            for (const auto& field : result_set.fields()) {
+        
+            }
+            for (auto& row : result_set.sequential_rows())
+            {
+                
+            }
+        }
+*/
         
         
     }

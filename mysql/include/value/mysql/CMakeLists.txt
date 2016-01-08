@@ -6,6 +6,9 @@ set(PUBLIC_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/error.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/execution_result.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/extract_optional.hpp
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/mysql_api.hpp
+
     ${CMAKE_CURRENT_SOURCE_DIR}/optional.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/result_set.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/statement.hpp

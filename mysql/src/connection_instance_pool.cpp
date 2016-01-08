@@ -1,3 +1,6 @@
+#include <value/mysql/mysql_api.hpp>
+
+
 #include "connection_instance_pool.hpp"
 #include "connection_instance_impl.hpp"
 
@@ -22,7 +25,17 @@ namespace value { namespace mysql {
         
         auto acquire() -> connection_instance::impl_ptr;
         
+        auto acquire_mysql() -> shared_mysql_ptr;
+        
     private:
+        
+        mysql_ptr new_connection() const;
+        shared_mysql_ptr make_return_to_pool(mysql_ptr mysql);
+        std::weak_ptr<impl> get_weak_ptr() { return shared_from_this(); }
+
+        mysql_ptr pop_connection();
+        void push_connection(mysql_ptr ptr);
+
         
         struct free_connection;
         friend struct free_connection;
@@ -38,6 +51,8 @@ namespace value { namespace mysql {
         const connection_invariants& _params;
         mutex_type _mutex;
         free_connection_list _free_connection_list;
+        
+        std::deque<mysql_ptr> _free_mysql_connections;
     };
     
     struct connection_instance::pool::impl::free_connection
@@ -48,7 +63,7 @@ namespace value { namespace mysql {
     private:
         std::weak_ptr<impl> _weak_pool;
     };
-
+    
     
     auto connection_instance::pool::impl::acquire()
     -> connection_instance::impl_ptr
@@ -68,6 +83,65 @@ namespace value { namespace mysql {
         };
     }
     
+    auto connection_instance::pool::impl::acquire_mysql() ->shared_mysql_ptr
+    {
+        while(auto mysql = pop_connection())
+        {
+            if (ping_query(mysql)) {
+                return make_return_to_pool(std::move(mysql));
+            }
+        }
+        // try to create a mysql connection
+        return make_return_to_pool(new_connection());
+    }
+    
+    auto connection_instance::pool::impl::make_return_to_pool(mysql_ptr mysql)
+    -> shared_mysql_ptr
+    {
+        auto deleter = [weak_self = this->get_weak_ptr(),
+                        original = mysql.get_deleter()](MYSQL* p)
+        {
+            auto self = weak_self.lock();
+            if (self && p) {
+                self->push_connection(mysql_ptr(p, original));
+            }
+            else {
+                original(p);
+            }
+        };
+        return {
+            mysql.release(),
+            std::move(deleter)
+        };
+    }
+    
+    auto connection_instance::pool::impl::pop_connection()
+    -> mysql_ptr
+    {
+        lock_type lock(_mutex);
+        if (!_free_mysql_connections.empty()) {
+            auto p = std::move(_free_mysql_connections.back());
+            _free_mysql_connections.pop_back();
+            return p;
+        }
+        else {
+            return { };
+        }
+    }
+    
+    auto connection_instance::pool::impl::push_connection(mysql_ptr ptr)
+    -> void
+    {
+        lock_type lock(_mutex);
+        _free_mysql_connections.push_back(std::move(ptr));
+    }
+    
+    auto connection_instance::pool::impl::new_connection() const
+    -> mysql_ptr
+    {
+        return connect(_params);
+    }
+    
     auto connection_instance::pool::impl::pop_free_connection() -> free_connection_ptr
     {
         lock_type lock(_mutex);
@@ -85,14 +159,15 @@ namespace value { namespace mysql {
     auto connection_instance::pool::impl::push_free_connection(free_connection_ptr connection) noexcept -> void
     {
         try {
+            lock_type lock(_mutex);
             _free_connection_list.push_back(std::move(connection));
         }
         catch(...) {
             
         }
     }
-
-
+    
+    
     
     //
     // pool::impl::free_connection
@@ -103,7 +178,7 @@ namespace value { namespace mysql {
     {
         
     }
-
+    
     void connection_instance::pool::impl::free_connection::operator()(connection_instance::impl* p) const noexcept
     {
         if (p)
@@ -117,7 +192,7 @@ namespace value { namespace mysql {
         }
     }
     
-
+    
     //
     // pool implementation
     //
@@ -125,7 +200,7 @@ namespace value { namespace mysql {
     connection_instance::pool::pool(const connection_invariants& params)
     : _impl_ptr(std::make_shared<impl>(params))
     {
-    
+        
     }
     
     auto connection_instance::pool::acquire() -> connection_instance

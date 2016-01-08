@@ -5,42 +5,81 @@
 #include <stdexcept>
 #include <exception>
 
+#include <mysql.h>
+
 #include "error.hpp"
+#include "connection_invariants.hpp"
 
 namespace value { namespace mysql {
     
     
     struct auto_free
     {
+        void operator()(MYSQL* p) const noexcept {
+            if (p) {
+                mysql_close(p);
+            }
+        }
+        
         void operator()(MYSQL_RES* p) const noexcept {
             if (p)
                 mysql_free_result(p);
         }
+        
+        void operator()(MYSQL_STMT* p) const noexcept {
+            if (p)
+                mysql_stmt_close(p);
+        }
     };
     
-    using result_ptr = std::unique_ptr<MYSQL_RES, auto_free>;
+    using mysql_ptr = std::unique_ptr<MYSQL, auto_free>;
+    using shared_mysql_ptr = std::shared_ptr<MYSQL>;
     
-    inline result_ptr fetch_metadata(MYSQL_STMT* stmt)
-    try
-    {
-        auto result = mysql_stmt_result_metadata(stmt);
-        if (not result)
-            throw_statement_error(stmt);
-            
-            // warning: if we get here, and result is null, the statement legitimately does not have a result
-            return result_ptr(result);
-            }
-    catch(...)
-    {
-        std::throw_with_nested(std::runtime_error(__func__));
+    using result_ptr = std::unique_ptr<MYSQL_RES, auto_free>;
+    using shared_result_ptr = std::shared_ptr<MYSQL_RES>;
+    using statement_ptr = std::unique_ptr<MYSQL_STMT, auto_free>;
+    using shared_statement_ptr = std::shared_ptr<MYSQL_STMT>;
+    
+    bool throw_error(MYSQL_STMT* ptr);
+    bool throw_error(MYSQL* ptr);
+    
+    inline bool throw_error(const mysql_ptr& ptr) {
+        return throw_error(ptr.get());
     }
     
+    inline bool throw_error(const shared_mysql_ptr& ptr) {
+        return throw_error(ptr.get());
+    }
+    
+    inline bool throw_error(const statement_ptr& ptr) {
+        return throw_error(ptr.get());
+    }
+
+    inline bool throw_error(const shared_statement_ptr& ptr) {
+        return throw_error(ptr.get());
+    }
+    
+    mysql_ptr connect(const connection_invariants& ci);
+    
+    bool ping_query(const mysql_ptr& ptr) noexcept;
+    
+    result_ptr result_metadata(MYSQL_STMT* stmt);
+    
+    inline result_ptr result_metadata(const statement_ptr& ptr) {
+        return result_metadata(ptr.get());
+    }
+    
+    inline result_ptr result_metadtaa(const shared_statement_ptr& ptr) {
+        return result_metadata(ptr.get());
+    }
+
     inline void bind_result(MYSQL_STMT* stmt, MYSQL_BIND* bind)
     try
     {
-        if (mysql_stmt_bind_result(stmt, bind))
-            throw_statement_error(stmt);
-            }
+        if (mysql_stmt_bind_result(stmt, bind)) {
+            throw_error(stmt);
+        }
+    }
     catch(...)
     {
         std::throw_with_nested(std::runtime_error(__func__));
@@ -62,7 +101,7 @@ namespace value { namespace mysql {
                 return fetch_result::success;
                 
             default:
-                throw_statement_error(stmt);
+                throw_error(stmt);
                 
             case MYSQL_NO_DATA:
                 return fetch_result::finished;
@@ -81,7 +120,7 @@ namespace value { namespace mysql {
     {
         if(mysql_stmt_fetch_column(stmt, bind, column, offset))
         {
-            throw_statement_error(stmt);
+            throw_error(stmt);
         }
     }
     catch(...)
@@ -93,7 +132,7 @@ namespace value { namespace mysql {
     try
     {
         if(mysql_stmt_prepare(stmt, sql.c_str(), sql.size()))
-            throw_statement_error(stmt);
+            throw_error(stmt);
     }
     catch(...)
     {
@@ -105,7 +144,7 @@ namespace value { namespace mysql {
     try
     {
         if(mysql_stmt_bind_param(stmt, bind)) {
-            throw_statement_error(stmt);
+            throw_error(stmt);
         }
     }
     catch(...)
@@ -118,7 +157,7 @@ namespace value { namespace mysql {
     try
     {
         if(mysql_stmt_execute(stmt)) {
-            throw_statement_error(stmt);
+            throw_error(stmt);
         }
     }
     catch(...)

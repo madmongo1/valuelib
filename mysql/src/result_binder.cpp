@@ -1,5 +1,5 @@
 #include "result_binder.hpp"
-#include "mysql_api.hpp"
+#include <value/mysql/mysql_api.hpp>
 
 namespace value { namespace mysql {
   
@@ -7,7 +7,7 @@ namespace value { namespace mysql {
     result_binder::result_binder(MYSQL_STMT* stmt)
     try
     : _statement(stmt)
-    , _metadata_ptr(fetch_metadata(_statement))
+    , _metadata_ptr(result_metadata(_statement))
     , _columns(_metadata_ptr.get() ? mysql_num_fields(_metadata_ptr.get()) : 0)
     , _binds(_columns ? std::make_unique<bind_array>(_columns) : nullptr)
     {
