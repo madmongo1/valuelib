@@ -4,6 +4,7 @@
 
 namespace value {
 	namespace stdext {
+        
 
         template<class String, EnableIf< IsModelOfString<String> >* = nullptr>
         typename String::size_type

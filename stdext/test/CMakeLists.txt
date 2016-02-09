@@ -1,7 +1,8 @@
 set(TEST_SOURCE
    ${TEST_SOURCE}
    ${CMAKE_CURRENT_LIST_FILE}
-   ${CMAKE_CURRENT_SOURCE_DIR}/shared_string.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/shared_string.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/bind_weak.cpp
    PARENT_SCOPE
 )
 
