@@ -53,7 +53,50 @@ TEST(bindWeakTest, testBasics)
     
     auto retbar2 = weak_call_bar();
     EXPECT_FALSE(bool(retbar2));
-    
-    
 }
 
+struct Resource
+{
+    
+};
+
+std::string something() { return "foo"; }
+
+TEST(bindWeakTest, unrelatedResourceTest)
+{
+    auto pr = std::make_shared<Resource>();
+    
+    size_t touched = 0;
+    auto f = [&touched](size_t times) { touched += times; };
+    
+    auto weak_touch_n = value::stdext::bind_weak(f, pr, std::placeholders::_1);
+    auto weak_touch_4 = value::stdext::bind_weak(f, pr, 4);
+    auto weak_something = value::stdext::bind_weak(something, pr);
+    
+    auto touched_n = weak_touch_n(1);
+    EXPECT_TRUE(bool(touched_n));
+    EXPECT_EQ(1, touched);
+    
+    auto touched_4 = weak_touch_4();
+    EXPECT_TRUE(bool(touched_4));
+    EXPECT_EQ(5, touched);
+    
+    auto str = weak_something();
+    EXPECT_TRUE(bool(str));
+    EXPECT_EQ(std::string("foo"), str.get());
+    
+    pr.reset();
+    
+    touched_n = weak_touch_n(1);
+    EXPECT_FALSE(bool(touched_n));
+    EXPECT_EQ(5, touched);
+    
+    touched_4 = weak_touch_4();
+    EXPECT_FALSE(bool(touched_4));
+    EXPECT_EQ(5, touched);
+    
+    str = weak_something();
+    EXPECT_FALSE(bool(str));
+
+    
+}

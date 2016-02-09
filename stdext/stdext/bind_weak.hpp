@@ -23,12 +23,6 @@ namespace value { namespace stdext {
             , _f(std::move(f))
             {}
             
-            template<class...Args>
-            struct caller
-            {
-                using return_value_type = std::result_of_t<F(Args...)>;
-            };
-            
             template<class...Args,
             class Result = std::result_of_t<F(Args...)>,
             std::enable_if_t<not std::is_void<Result>::value>* = nullptr>
@@ -69,8 +63,12 @@ namespace value { namespace stdext {
         };
     }
     
-    template<class Ret, class Target, class...FuncArgs, class Pointee, class...Args>
-    auto bind_weak(Ret (Target::*mfp)(FuncArgs...), const std::shared_ptr<Pointee>& ptr, Args&&...args)
+    //
+    // versions for handling member functions
+    //
+    
+    template<class Ret, class Target, class...FuncArgs, class...Args>
+    auto bind_weak(Ret (Target::*mfp)(FuncArgs...), const std::shared_ptr<Target>& ptr, Args&&...args)
     {
         using binder_type = decltype(std::bind(mfp, ptr.get(), std::forward<Args>(args)...));
         return detail::weak_binder<Target, binder_type>
@@ -79,6 +77,31 @@ namespace value { namespace stdext {
             std::bind(mfp, ptr.get(), std::forward<Args>(args)...)
         };
     }
+
+    // version for calling any callable when an unrelated weak_ptr can be locked
+    template<class Callable, class Pointee, class...Args>
+    auto bind_weak(Callable&& f, const std::shared_ptr<Pointee>& ptr, Args&&...args)
+    {
+        using binder_type = decltype(std::bind(std::forward<Callable>(f), std::forward<Args>(args)...));
+        return detail::weak_binder<Pointee, binder_type>
+        {
+            std::weak_ptr<Pointee>(ptr),
+            std::bind(std::forward<Callable>(f), std::forward<Args>(args)...)
+        };
+    }
+    
+    // optimisation for no arguments
+    template<class Callable, class Pointee>
+    auto bind_weak(Callable&& f, const std::shared_ptr<Pointee>& ptr)
+    {
+        return detail::weak_binder<Pointee, Callable>
+        {
+            std::weak_ptr<Pointee>(ptr),
+            std::forward<Callable>(f)
+        };
+    }
+    
+    
     
     
     
