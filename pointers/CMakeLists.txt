@@ -26,10 +26,11 @@ ${CMAKE_CURRENT_SOURCE_DIR}/pointers
 )
 
 find_package(GTest)
+find_package(Threads)
 
 if(GTEST_FOUND)
     include_directories(BEFORE SYSTEM ${GTEST_INCLUDE_DIRS})
     add_executable(ValueLib_pointers_test ${TEST_SOURCE} ${TEST_HEADERS})
     add_test(NAME test_all_pointers COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ValueLib_pointers_test)
-    target_link_libraries(ValueLib_pointers_test ValueLib_pointers ${GTEST_BOTH_LIBRARIES})
+    target_link_libraries(ValueLib_pointers_test ${CMAKE_THREAD_LIBS_INIT} ValueLib_pointers ${GTEST_BOTH_LIBRARIES})
 endif()

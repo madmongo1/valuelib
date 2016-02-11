@@ -24,10 +24,11 @@ $<INSTALL_INTERFACE:include/valuelib/stdext>
 )
 
 find_package(GTest)
+find_package(Threads)
 
 if(GTEST_FOUND)
     include_directories(BEFORE SYSTEM ${GTEST_INCLUDE_DIRS})
     add_executable(ValueLib_stdext_test ${TEST_SOURCE} ${TEST_HEADERS})
     add_test(NAME test_all_stdext COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ValueLib_stdext_test)
-    target_link_libraries(ValueLib_stdext_test ValueLib_stdext ${GTEST_BOTH_LIBRARIES})
+    target_link_libraries(ValueLib_stdext_test ${CMAKE_THREAD_LIBS_INIT} ValueLib_stdext ${GTEST_BOTH_LIBRARIES})
 endif()

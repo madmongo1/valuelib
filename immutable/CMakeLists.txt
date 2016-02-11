@@ -1,6 +1,8 @@
 
 project(ValueLib_immutable)
 
+find_package(Threads)
+
 set(SRCS)
 set(BINARY_SRCS)
 add_subdirectory(include)
@@ -38,6 +40,11 @@ PRIVATE
 )
 
 install(
+    EXPORT "ValueLib_immutable"
+    DESTINATION "lib"
+)
+
+install(
     TARGETS ValueLib_immutable
     EXPORT "ValueLib_immutable"
     LIBRARY DESTINATION "lib"
@@ -45,15 +52,12 @@ install(
     RUNTIME DESTINATION "bin"
     INCLUDES DESTINATION "include")
 
-export(EXPORT ValueLib_immutable)
-
-
 find_package(GTest)
 
 if(GTEST_FOUND)
     include_directories(BEFORE SYSTEM ${GTEST_INCLUDE_DIRS})
 	add_executable(ValueLib_immutable_test ${TEST_FILES})
-	target_link_libraries(ValueLib_immutable_test ValueLib_immutable ${GTEST_BOTH_LIBRARIES})
+	target_link_libraries(ValueLib_immutable_test ${CMAKE_THREAD_LIBS_INIT} ValueLib_immutable ${GTEST_BOTH_LIBRARIES})
     add_test(NAME test_all_immutable COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ValueLib_immutable_test)
 endif()
 
