@@ -1,4 +1,4 @@
-project(pointers)
+project(ValueLib_pointers)
 
 MACRO(SOURCE_GROUP_BY_FOLDER)
     FOREACH(file ${ARGN})
@@ -17,10 +17,10 @@ add_subdirectory(test)
 source_group_by_folder(${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${PRIVATE_SOURCE} ${TEST_SOURCE} ${TEST_HEADERS})
 
 
-add_library(pointers ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${PRIVATE_SOURCE})
-target_include_directories(pointers PUBLIC
+add_library(ValueLib_pointers ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${PRIVATE_SOURCE})
+target_include_directories(ValueLib_pointers PUBLIC
 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-$<INSTALL_INTERFACE:include/valuelib/stdext>
+$<INSTALL_INTERFACE:include/valuelib/pointers>
 PRIVATE
 ${CMAKE_CURRENT_SOURCE_DIR}/pointers
 )
@@ -29,7 +29,7 @@ find_package(GTest)
 
 if(GTEST_FOUND)
     include_directories(BEFORE SYSTEM ${GTEST_INCLUDE_DIRS})
-    add_executable(pointers_test ${TEST_SOURCE} ${TEST_HEADERS})
-    add_test(NAME test_all_pointers COMMAND ${CMAKE_CURRENT_BINARY_DIR}/pointers_test)
-    target_link_libraries(pointers_test pointers ${GTEST_BOTH_LIBRARIES})
+    add_executable(ValueLib_pointers_test ${TEST_SOURCE} ${TEST_HEADERS})
+    add_test(NAME test_all_pointers COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ValueLib_pointers_test)
+    target_link_libraries(ValueLib_pointers_test ValueLib_pointers ${GTEST_BOTH_LIBRARIES})
 endif()
