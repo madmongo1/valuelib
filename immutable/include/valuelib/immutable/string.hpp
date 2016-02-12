@@ -8,9 +8,9 @@ namespace value { namespace immutable {
 	namespace detail
     {
         template<std::size_t Length>
-        struct string
+        struct string_type
         {
-            constexpr string(const char* buffer)
+            constexpr string_type(const char* buffer)
             : _data {}
             {
                 for(std::size_t i = 0 ; i < Length ; ++i)
@@ -19,7 +19,7 @@ namespace value { namespace immutable {
             }
 
             template<std::size_t RLength>
-            constexpr auto concat(const string<RLength>& r) const
+            constexpr auto concat(const string_type<RLength>& r) const
             {
                 char buf [Length + RLength + 1] = { 0 };
                 for (size_t i = 0 ; i < Length ; ++i) {
@@ -28,7 +28,7 @@ namespace value { namespace immutable {
                 for (size_t i = 0 ; i < RLength ; ++i) {
                     buf[i + Length] = r.at(i);
                 }
-                return string<Length + RLength>(buf);
+                return string_type<Length + RLength>(buf);
             }
             
             template<std::size_t RLength>
@@ -41,7 +41,7 @@ namespace value { namespace immutable {
                 for (size_t i = 0 ; i < RLength ; ++i) {
                     buf[i + Length] = r[i];
                 }
-                return string<Length + RLength-1>(buf);
+                return string_type<Length + RLength-1>(buf);
             }
             
             const char* c_str() const noexcept { return _data; }
@@ -56,51 +56,51 @@ namespace value { namespace immutable {
         };
         
         template<std::size_t L, std::size_t R>
-        bool operator==(const string<L>& l, const string<R>& r)
+        bool operator==(const string_type<L>& l, const string_type<R>& r)
         {
             return l.size() == r.size()
             and (std::memcmp(l.c_str(), r.c_str(), r.size()) == 0);
         }
         
         template<std::size_t L, std::size_t R>
-        bool operator!=(const string<L>& l, const string<R>& r)
+        bool operator!=(const string_type<L>& l, const string_type<R>& r)
         {
             return !(l == r);
         }
         
         template<std::size_t Length>
-        bool operator==(const std::string& l, const string<Length>& r)
+        bool operator==(const std::string& l, const string_type<Length>& r)
         {
             return l.size() == r.size()
             and (std::memcmp(l.c_str(), r.c_str(), r.size()) == 0);
         }
         
         template<std::size_t Length>
-        bool operator!=(const std::string& l, const string<Length>& r)
+        bool operator!=(const std::string& l, const string_type<Length>& r)
         {
             return !(l == r);
         }
         
         template<std::size_t Length>
-        bool operator==(const string<Length>& l, const std::string& r)
+        bool operator==(const string_type<Length>& l, const std::string& r)
         {
             return r == l;
         }
     }
     template<std::size_t N>
-    using string_type = detail::string<N>;
+    using string_type = detail::string_type<N>;
     
     template<std::size_t Length>
     constexpr auto string(const char (&source) [Length])
     {
-        auto s = detail::string<Length-1>(source);
+        auto s = string_type<Length-1>(source);
         return s;
     }
     
     template<std::size_t Length>
     constexpr auto string(char (&source) [Length])
     {
-        return detail::string<Length-1>(source);
+        return string_type<Length-1>(source);
     }
 
     template<class T, T N, typename std::enable_if_t<std::is_integral<T>::value and not std::is_same<bool, T>::value>* = nullptr>
@@ -130,5 +130,52 @@ namespace value { namespace immutable {
         }
         return string(buffer);
     }
+    
+    
+    /// join
+    
+    namespace detail {
+        
+        
+        template<size_t I, size_t N>
+        struct join_impl
+        {
+            template<class Delimiter, class Tuple>
+            constexpr auto apply(Delimiter del, Tuple t) const
+            {
+                return del.concat(std::get<I>(t)).concat(join_impl<I + 1, N>().apply(del, t));
+            }
+        };
 
+        template<size_t N>
+        struct join_impl<N, N>
+        {
+            template<class Delimiter, class Tuple>
+            constexpr auto apply(Delimiter del, Tuple t) const
+            {
+                return value::immutable::string("");
+            }
+        };
+        
+        template<size_t N>
+        struct join_impl<0, N>
+        {
+            template<class Delimiter, class Tuple>
+            constexpr auto apply(Delimiter del, Tuple t) const
+            {
+                return std::get<0>(t).concat(join_impl<1, N>().apply(del, t));
+            }
+        };
+        
+
+    }
+    
+    template<std::size_t DelimiterLength, std::size_t...StringLengths>
+    constexpr auto join(const char (&delimeter)[DelimiterLength], std::tuple<string_type<StringLengths>...> strings)
+    {
+        constexpr auto joiner = detail::join_impl<0, sizeof...(StringLengths)>();
+        return joiner.apply(string(delimeter), strings);
+    }
+    
+    
 }}
