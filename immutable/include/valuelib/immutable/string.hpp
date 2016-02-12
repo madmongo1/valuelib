@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <utility>
+#include <boost/operators.hpp>
 
 namespace value { namespace immutable {
 
@@ -48,8 +49,43 @@ namespace value { namespace immutable {
                 return _data[i];
             }
             
+            constexpr static auto size() { return Length; }
+
+        private:
             char _data[Length+1];
         };
+        
+        template<std::size_t L, std::size_t R>
+        bool operator==(const string<L>& l, const string<R>& r)
+        {
+            return l.size() == r.size()
+            and (std::memcmp(l.c_str(), r.c_str(), r.size()) == 0);
+        }
+        
+        template<std::size_t L, std::size_t R>
+        bool operator!=(const string<L>& l, const string<R>& r)
+        {
+            return !(l == r);
+        }
+        
+        template<std::size_t Length>
+        bool operator==(const std::string& l, const string<Length>& r)
+        {
+            return l.size() == r.size()
+            and (std::memcmp(l.c_str(), r.c_str(), r.size()) == 0);
+        }
+        
+        template<std::size_t Length>
+        bool operator!=(const std::string& l, const string<Length>& r)
+        {
+            return !(l == r);
+        }
+        
+        template<std::size_t Length>
+        bool operator==(const string<Length>& l, const std::string& r)
+        {
+            return r == l;
+        }
     }
     template<std::size_t N>
     using string_type = detail::string<N>;
