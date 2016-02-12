@@ -1,5 +1,6 @@
 #pragma once
 #include <cstddef>
+#include <utility>
 
 namespace value { namespace immutable {
 
@@ -50,6 +51,8 @@ namespace value { namespace immutable {
             char _data[Length+1];
         };
     }
+    template<std::size_t N>
+    using string_type = detail::string<N>;
     
     template<std::size_t Length>
     constexpr auto string(const char (&source) [Length])
@@ -62,6 +65,34 @@ namespace value { namespace immutable {
     constexpr auto string(char (&source) [Length])
     {
         return detail::string<Length-1>(source);
+    }
+
+    template<class T, T N, typename std::enable_if_t<std::is_integral<T>::value and not std::is_same<bool, T>::value>* = nullptr>
+    constexpr auto decimal_digits()
+    {
+        std::size_t digits = 0;
+        T acc = N;
+        do {
+            ++digits;
+            acc /= 10;
+        } while(acc);
+        return digits;
+    }
+
+    template<class T, T N, typename std::enable_if_t<std::is_integral<T>::value and not std::is_same<bool, T>::value>* = nullptr>
+    constexpr auto to_string()
+    {
+        constexpr auto digits = decimal_digits<T, N>();
+        char buffer[digits + 1] = { 0 };
+        auto digit = digits;
+        T acc = N;
+        while(digit)
+        {
+            --digit;
+            buffer[digit] = char('0' + (acc % 10));
+            acc /= 10;
+        }
+        return string(buffer);
     }
 
 }}
