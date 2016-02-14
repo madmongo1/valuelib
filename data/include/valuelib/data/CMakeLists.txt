@@ -1,7 +1,12 @@
+add_subdirectory(connectors)
+add_subdirectory(ptree)
+add_subdirectory(sql)
 add_sources(
 CMakeLists.txt
+metafunctions.hpp
 enumeration.hpp
 field.hpp
 storage.hpp
 entity.hpp
+column.hpp
 )

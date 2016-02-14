@@ -1,19 +1,14 @@
 #pragma once
+#include "column.hpp"
 
 namespace value { namespace data {
-  
-    template<class...Fields>
-    struct field_list
-    {
-        
-    };
-
+ 
     struct index_component_tag {};
 
-    template<class Field>
-    struct field_reference
+    template<class Column>
+    struct column_ref
     {
-        using field_type = Field;
+        using column_definition = Column;
         using tag_type = index_component_tag;
     };
     
@@ -50,10 +45,22 @@ namespace value { namespace data {
     // a data entity
     struct entity_tag {};
     
-    template<class FieldList, class PrimaryKeyIndex = index<>, class Indexes = index_list<>>
-    struct table_entity
+    template<class Tag, class ColumnList, class PrimaryKeyIndex = index<>, class Indexes = index_list<>>
+    struct table
     {
-        using tag_type = entity_tag;
+        // CONCEPT:
+        // tag_type::identifier() -> data::immutable::string<>
+        using tag_type = Tag;
+        
+        // identifies the kind of entity
+        using object_type_tag = entity_tag;
+        
+        // is a column_list<...>
+        using column_list_type = ColumnList;
+        
+        using primary_key_type = PrimaryKeyIndex;
+        
+        using index_list_type = Indexes;
         
     };
 }}

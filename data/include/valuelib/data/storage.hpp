@@ -2,6 +2,8 @@
 #include "field.hpp"
 #include <boost/uuid/uuid.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/optional.hpp>
+#include "metafunctions.hpp"
 
 namespace value { namespace data {
     
@@ -61,6 +63,21 @@ namespace value { namespace data {
         using nullable_type = Nullable;
         using native_type = NativeType;
     };
+    
+    namespace metafunction { namespace impl {
+        template<class NativeType>
+        struct native_arg_type<uuid_storage<NativeType, nullable>>
+        {
+            using argument_type = uuid_storage<NativeType, nullable>;
+            using result = boost::optional<typename argument_type::native_type>;
+        };
+        template<class NativeType>
+        struct native_arg_type<uuid_storage<NativeType, not_null>>
+        {
+            using argument_type = uuid_storage<NativeType, nullable>;
+            using result = typename argument_type::native_type;
+        };
+    }}
     
     template<class NativeType, class Nullable>
     struct timestamp_storage
