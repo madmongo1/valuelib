@@ -1,9 +1,10 @@
 #pragma once
 #include "metafunctions.hpp"
+#include "storage.hpp"
 
 namespace value { namespace data {
 
-	template<class Tag, class StorageDefinition>
+	template<class Tag, class StorageDefinition, class DefaultValue = no_default>
 	struct column
 	{
 		using tag_type = Tag;
@@ -12,6 +13,14 @@ namespace value { namespace data {
 		static constexpr auto identifier() {
 			return Tag::identifier();
 		}
+        
+        static constexpr auto storage() {
+            return StorageDefinition();
+        }
+        
+        static constexpr auto default_value() {
+            return DefaultValue();
+        }
 	};
     namespace metafunction { namespace impl {
         
@@ -26,6 +35,6 @@ namespace value { namespace data {
 	template<class...Columns>
 	struct column_list
 	{
-
+        static constexpr auto as_tuple() { return std::tuple<Columns...>{}; }
 	};
 }}

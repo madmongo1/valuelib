@@ -53,7 +53,17 @@ namespace value { namespace immutable {
             }
             
             constexpr static auto size() { return Length; }
-
+            
+            template<std::size_t RLen>
+            constexpr auto operator+(string_type<RLen> r) const {
+                return this->concat(r);
+            }
+            
+            template<std::size_t RLen>
+            constexpr auto operator+(const char (&r)[RLen]) const {
+                return this->concat(r);
+            }
+            
         private:
             char _data[Length+1];
         };
@@ -184,6 +194,48 @@ namespace value { namespace immutable {
         constexpr auto joiner = detail::join_impl<0, sizeof...(StringLengths)>();
         return joiner.apply(string(delimeter), strings);
     }
+    
+    
+    
+    template<std::size_t InitialLength>
+    constexpr auto quoted(value::immutable::string_type<InitialLength> in)
+    {
+        return value::immutable::string("'") + in + "'";
+    }
+    
+    namespace detail {
+        template<std::size_t I, class...Ts, typename std::enable_if_t<I == 0> * = nullptr>
+        constexpr auto to_quoted_list(std::tuple<Ts...> t);
+        template<std::size_t I, class...Ts, typename std::enable_if_t<(I > 0) and (I < sizeof...(Ts))> * = nullptr>
+        constexpr auto to_quoted_list(std::tuple<Ts...> t);
+        template<std::size_t I, class...Ts, typename std::enable_if_t<(I == sizeof...(Ts))> * = nullptr>
+        constexpr auto to_quoted_list(std::tuple<Ts...> t);
+        
+        template<std::size_t I, class...Ts, typename std::enable_if_t<I == 0> *>
+        constexpr auto to_quoted_list(std::tuple<Ts...> t)
+        {
+            return quoted(std::get<I>(t)) + to_quoted_list<I+1>(t);
+        };
+        
+        template<std::size_t I, class...Ts, typename std::enable_if_t<(I > 0) and (I < sizeof...(Ts))> *>
+        constexpr auto to_quoted_list(std::tuple<Ts...> t)
+        {
+            return value::immutable::string(",") + quoted(std::get<I>(t)) + to_quoted_list<I+1>(t);
+        };
+        
+        template<std::size_t I, class...Ts, typename std::enable_if_t<(I == sizeof...(Ts))> *>
+        constexpr auto to_quoted_list(std::tuple<Ts...> t)
+        {
+            return value::immutable::string("");
+        };
+    }
+    
+    template<class...Ts>
+    constexpr auto to_quoted_list(std::tuple<Ts...> t)
+    {
+        return detail::to_quoted_list<0>(t);
+    };
+
     
     
 }}
