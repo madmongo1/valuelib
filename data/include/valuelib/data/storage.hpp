@@ -1,9 +1,10 @@
 #pragma once
 #include "field.hpp"
 #include <boost/uuid/uuid.hpp>
-#include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/optional.hpp>
 #include "metafunctions.hpp"
+#include <type_traits>
 
 namespace value { namespace data {
     
@@ -13,6 +14,26 @@ namespace value { namespace data {
     struct nullable_tag {};
     struct nullable { using tag_type = nullable_tag; };
     struct not_null { using tag_type = nullable_tag; };
+    
+    template<class Nullable>
+    struct implement_nullable
+    {
+        static constexpr auto nullable() { return Nullable(); }
+        static_assert(std::is_same<Nullable, ::value::data::nullable>::value or std::is_same<Nullable, not_null>::value,
+                      "Nullable must be either nullable or not_null");
+    };
+    
+    //
+    // the concept of default
+    //
+    
+    struct no_default {};
+    struct current_timestamp {};
+    // a special tag that tells the table to get it's default from the ::default_value() function
+    // on the native type (usually most useful for enumerations)
+    struct default_from_native {};
+    
+    
     
     //
     // the concept of limited length
@@ -46,17 +67,18 @@ namespace value { namespace data {
     ///         if so, data access will be in terms of optional<NativeType>
     ///
     template<class NativeType, class LengthLimit, class Nullable>
-    struct string_storage
+    struct string_storage : implement_nullable<Nullable>
     {
         struct attribute_tags : nullable_tag, size_limit_tag {};
         
         using length_limit_type = LengthLimit;
         using nullable_type = Nullable;
         using native_type = NativeType;
+        
     };
     
     template<class NativeType, class Nullable>
-    struct uuid_storage
+    struct uuid_storage : implement_nullable<Nullable>
     {
         struct attribute_tags : nullable_tag {};
         
@@ -79,10 +101,12 @@ namespace value { namespace data {
         };
     }}
     
-    template<class NativeType, class Nullable>
-    struct timestamp_storage
+    template<class NativeType, class Nullable = not_null, class DefaultValue = no_default>
+    struct timestamp_storage : implement_nullable<Nullable>
     {
         struct attribute_tags : nullable_tag {};
+
+        // default types
         
         using nullable_type = Nullable;
         using native_type = NativeType;
@@ -94,12 +118,16 @@ namespace value { namespace data {
     ///         if so, data access will be in terms of optional<NativeType>
     ///
     template<class NativeType, class Nullable>
-    struct text_set_storage
+    struct text_set_storage : implement_nullable<Nullable>
     {
         struct attribute_tags : nullable_tag {};
         
         using nullable_type = Nullable;
         using native_type = NativeType;
+        
+        static constexpr auto get_native_type() { return NativeType(); }
+        static constexpr auto strings() { return get_native_type().strings(); }
+
     };
     
     namespace detail

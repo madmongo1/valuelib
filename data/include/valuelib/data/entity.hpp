@@ -10,6 +10,7 @@ namespace value { namespace data {
     {
         using column_definition = Column;
         using tag_type = index_component_tag;
+        static constexpr auto column() { return Column(); }
     };
     
     template<class Expression>
@@ -27,7 +28,8 @@ namespace value { namespace data {
     template<class...Expressions>
     struct index
     {
-        
+        static constexpr bool empty() { return sizeof...(Expressions) == 0; }
+        static constexpr auto as_tuple() { return std::make_tuple(Expressions()...); }
     };
     
     template<class Name, class...Expressions>
@@ -42,23 +44,41 @@ namespace value { namespace data {
         
     };
     
+    struct no_primary_key_type {};
+    
+    template<class Index>
+    struct primary_key_type
+    {
+        static constexpr auto index() { return Index(); }
+    };
+    
     // a data entity
     struct entity_tag {};
     
-    template<class Tag, class ColumnList, class PrimaryKeyIndex = index<>, class Indexes = index_list<>>
+    template<
+    class Identifier,
+    class ColumnList,
+    class PrimaryKeyIndex = no_primary_key_type,
+    class Indexes = index_list<>
+    >
     struct table
     {
         // CONCEPT:
         // tag_type::identifier() -> data::immutable::string<>
-        using tag_type = Tag;
+        using identifier_type = Identifier;
+        static constexpr auto identifier() { return identifier_type::identifier(); }
+        
+        
         
         // identifies the kind of entity
         using object_type_tag = entity_tag;
         
         // is a column_list<...>
         using column_list_type = ColumnList;
+        static constexpr auto columns() { return column_list_type(); }
         
-        using primary_key_type = PrimaryKeyIndex;
+//        using primary_key_type = PrimaryKeyIndex;
+        static constexpr auto primary_key(){ return value::data::primary_key_type<PrimaryKeyIndex>(); }
         
         using index_list_type = Indexes;
         
