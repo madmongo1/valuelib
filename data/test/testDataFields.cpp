@@ -98,7 +98,8 @@ struct column_list
 };
 
 
-struct tbl_session_definition
+namespace structure {
+struct tbl_session
 {
     struct login_state : value::data::column<login_state, value::data::default_storage<concepts::login_state> >
     {
@@ -125,37 +126,41 @@ struct tbl_session_definition
     
     using indexes = value::data::index_list<>;
 };
+}
 
-struct tbl_session : tbl_session_definition,
-value::data::table<tbl_session,
-tbl_session_definition::columns,
-tbl_session_definition::primary_key,
-tbl_session_definition::indexes>
+struct tbl_session
 {
+    struct login_state_id { IDENTIFIED_BY(login_state); };
+    using login_state = value::data::column<login_state_id, value::data::default_storage<concepts::login_state> >;
+
+    struct password_hash : value::data::column<password_hash, value::data::default_storage<concepts::password_hash> >
+    {
+        IDENTIFIED_BY(password_hash);
+    };
+
+    struct username : value::data::column<username, value::data::default_storage<concepts::username> >
+    { IDENTIFIED_BY(username); };
+
+    struct last_seen : value::data::column<last_seen, value::data::default_storage<concepts::last_seen> >
+    { IDENTIFIED_BY(last_seen); };
+
+    struct session_cookie : value::data::column<session_cookie, value::data::default_storage<concepts::session_cookie> >
+    { IDENTIFIED_BY(session_cookie)};
+
+    using columns = value::data::column_list<login_state, password_hash>;
+
+    using primary_key = value::data::index<value::data::column_ref<session_cookie>>;
+
+    using indexes = value::data::index_list<>;
+
+
+    using structure = structure::tbl_session;
     IDENTIFIED_BY(tbl_session);
+    using definition = value::data::table<tbl_session, structure::columns, structure::primary_key, structure::indexes>;
+
 };
 
 
-/*
- static constexpr auto session_table = make_table_entity("tbl_session"),
- make_columns(make_column("login_state", value::data::default_storage<concepts::login_state>)),
- make_primary_key(),
- make_indexes()));
- {
- DEFINE_IDENTIFIER("tbl_session");
- DEFINE_COLUMN(login_state, value::data::default_storage<concepts::login_state>);
- DEFINE_COLUMN(password_hash, value::data::default_storage<concepts::password_hash>);
- DEFINE_COLUMN(username, value::data::default_storage<concepts::username>);
- DEFINE_COLUMN(last_seen, value::data::default_storage<concepts::last_seen>);
- DEFINE_COLUMN(session_cookie, value::data::default_storage<concepts::session_cookie>);
- 
- using biography_storage = value::data::string_storage<concepts::biography, value::data::unlimited_length, value::data::nullable>;
- DEFINE_COLUMN(biography, biography_storage);
- 
- using columns = std::tuple<login_state, password_hash, username, last_seen, session_cookie, biography>;
- using primary_key = std::tuple<session_cookie>;
- };
- */
 /*
  struct session_table
  : value::data::table_entity
@@ -193,4 +198,37 @@ TEST(testStorage, testBasics)
 {
     std::istringstream ss("something");
     make_something(ss.str())->foo();
+}
+
+
+    struct tbl_session
+    {
+        static constexpr auto identifier() { return value::immutable::string("tbl_session"); }
+    };
+
+
+
+
+static constexpr auto session_table = make_table_entity("tbl_session"),
+make_columns(make_column("login_state", value::data::default_storage<concepts::login_state>)),
+make_primary_key(),
+make_indexes()));
+{
+    DEFINE_IDENTIFIER("tbl_session");
+    DEFINE_COLUMN(login_state, value::data::default_storage<concepts::login_state>);
+    DEFINE_COLUMN(password_hash, value::data::default_storage<concepts::password_hash>);
+    DEFINE_COLUMN(username, value::data::default_storage<concepts::username>);
+    DEFINE_COLUMN(last_seen, value::data::default_storage<concepts::last_seen>);
+    DEFINE_COLUMN(session_cookie, value::data::default_storage<concepts::session_cookie>);
+
+    using biography_storage = value::data::string_storage<concepts::biography, value::data::unlimited_length, value::data::nullable>;
+    DEFINE_COLUMN(biography, biography_storage);
+
+    using columns = std::tuple<login_state, password_hash, username, last_seen, session_cookie, biography>;
+    using primary_key = std::tuple<session_cookie>;
+};
+
+TEST(sql_generation, mysql)
+{
+
 }
