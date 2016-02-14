@@ -81,15 +81,14 @@ namespace value { namespace data {
     }
 
 
-    template<class Tag, class EnumType, class StringGenerator>
+    template<class Tag>
     struct enumeration
     {
-        using value_type = EnumType;
         using tag_type = Tag;
-        using generator_type = StringGenerator;
-        using implementation = enumeration<tag_type, value_type, generator_type>;
+        using value_type = typename tag_type::values;
+        using generator_type = typename tag_type::generator;
         
-        constexpr enumeration(EnumType e = default_value()) : _value(e) {};
+        constexpr enumeration(value_type e = default_value()) : _value(e) {};
         
         enumeration(const std::string& s) : _value(from_string(s)) {};
         
@@ -102,18 +101,18 @@ namespace value { namespace data {
         
         static constexpr auto default_value() { return static_cast<value_type>(0); }
         
-        static constexpr auto strings() { return StringGenerator::strings(); }
+        static constexpr auto strings() { return generator_type::strings(); }
         
-        EnumType _value;
+        value_type _value;
     };
-    template<class Tag, class EnumType, class StringGenerator>
-    std::string to_string(enumeration<Tag, EnumType, StringGenerator> e)
+    template<class Tag>
+    std::string to_string(enumeration<Tag> e)
     {
-        constexpr auto strings = StringGenerator::strings();
+        constexpr auto strings = enumeration<Tag>::strings();
         return nth_string(strings, std::size_t(e.value()));
     }
-    template<class Tag, class EnumType, class StringGenerator>
-    std::ostream& operator<<(std::ostream& os, enumeration<Tag, EnumType, StringGenerator> e)
+    template<class Tag>
+    std::ostream& operator<<(std::ostream& os, enumeration<Tag> e)
     {
         return os << to_string(e);
     }
@@ -148,12 +147,8 @@ namespace enumeration_workspace { \
     }; \
 } \
  \
-struct Name \
-: value::data::enumeration<Name, enumeration_workspace::Name::values, enumeration_workspace::Name::generator> \
-{ \
-    using implementation::implementation; \
-\
-}
+using Name = value::data::enumeration<enumeration_workspace::Name>
+
     /*
 enum class name { \
 BOOST_PP_SEQ_ENUM(BOOST_PP_SEQ_TRANSFORM(DEFINE_ENUM_DECL_VAL, name, val_seq)) \

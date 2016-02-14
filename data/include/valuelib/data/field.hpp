@@ -135,12 +135,11 @@ namespace std {
 }
 
 #define VALUE_DATA_DEFINE_FIELD(Identifier, Type) \
-class Identifier \
-: public value::data::field_type<Identifier, Type> \
-{ \
-    using inherited = value::data::field_type<Identifier, Type>; \
-public: \
-    using inherited::inherited; \
-    static constexpr auto identifier = value::immutable::string(#Identifier); \
-}
+namespace field_workspace { \
+    struct Identifier \
+    { \
+        static constexpr auto identifier = value::immutable::string(#Identifier); \
+    }; \
+} \
+using Identifier = value::data::field_type<field_workspace::Identifier, Type>
 

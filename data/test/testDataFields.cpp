@@ -3,7 +3,12 @@
 
 #include <valuelib/data/enumeration.hpp>
 #include <valuelib/data/field.hpp>
+#include <valuelib/data/storage.hpp>
+#include <valuelib/data/entity.hpp>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 VALUE_DATA_DEFINE_FIELD(foo, std::string);
 VALUE_DATA_DEFINE_FIELD(bar, std::string);
@@ -45,5 +50,54 @@ TEST(testDataItem, testMap)
     
     constexpr auto is_enum = std::is_enum<Name::value_type>::value;
     EXPECT_TRUE(is_enum);
+    
+}
+
+namespace concepts {
+VALUE_DATA_DEFINE_ENUM(login_state, (logged_out)(logged_in));
+VALUE_DATA_DEFINE_FIELD(username, std::string);
+VALUE_DATA_DEFINE_FIELD(password_hash, std::string);
+VALUE_DATA_DEFINE_FIELD(last_seen, boost::posix_time::ptime);
+VALUE_DATA_DEFINE_FIELD(session_cookie, boost::uuids::uuid);
+VALUE_DATA_DEFINE_FIELD(biography, std::string);
+}
+
+#define DEFINE_IDENTIFIER(Identifier) \
+static constexpr auto identifier() { return value::immutable::string(#Identifier); }
+
+#define DEFINE_COLUMN(ColumnName, Storage) \
+struct ColumnName { \
+    DEFINE_IDENTIFIER(ColumnName); \
+    using storage_type = Storage; \
+}
+
+struct session_table
+{
+    DEFINE_COLUMN(login_state, value::data::default_storage<concepts::login_state>);
+    DEFINE_COLUMN(password_hash, value::data::default_storage<concepts::password_hash>);
+    DEFINE_COLUMN(username, value::data::default_storage<concepts::username>);
+    DEFINE_COLUMN(last_seen, value::data::default_storage<concepts::last_seen>);
+    DEFINE_COLUMN(session_cookie, value::data::default_storage<concepts::session_cookie>);
+    
+    using biography_storage = value::data::string_storage<concepts::biography, value::data::unlimited_length, value::data::nullable>;
+    DEFINE_COLUMN(biography, biography_storage);
+    
+    using columns = std::tuple<login_state, password_hash, username, last_seen, session_cookie, biography>;
+    using primary_key = std::tuple<session_cookie>;
+};
+/*
+struct session_table
+: value::data::table_entity
+<
+value::data::field_list<session_cookie, login_state, username, password_hash, last_seen>,
+value::data::index< value::data::ascending<session_cookie> >,
+value::data::index_list<>
+>
+{
+    
+};
+ */
+TEST(testStorage, testBasics)
+{
     
 }
