@@ -59,7 +59,7 @@ namespace value { namespace immutable {
         };
 
         template<std::size_t Length>
-        inline constexpr std::ostream& operator<<(std::ostream& os, const string_type<Length>& str)
+        inline constexpr std::ostream& operator<<(std::ostream& os, string_type<Length> str)
         {
             return os.write(str.c_str(), str.size());
         }

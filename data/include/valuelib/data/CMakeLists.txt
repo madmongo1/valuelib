@@ -1,7 +1,9 @@
 add_sources(
 CMakeLists.txt
+metafunctions.hpp
 enumeration.hpp
 field.hpp
 storage.hpp
 entity.hpp
+column.hpp
 )

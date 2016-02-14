@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <type_traits>
 
+#include "test_utils.hpp"
+
 #include <valuelib/data/enumeration.hpp>
 #include <valuelib/data/field.hpp>
 #include <valuelib/data/storage.hpp>
@@ -19,7 +21,7 @@ TEST(testDataItem, testMap)
 {
     constexpr auto assignable_from_char_star = std::is_assignable<foo, const char*>::value;
     EXPECT_FALSE(assignable_from_char_star);
-
+    
     constexpr auto assignable_from_string = std::is_assignable<foo, std::string>::value;
     EXPECT_FALSE(assignable_from_string);
     
@@ -54,12 +56,12 @@ TEST(testDataItem, testMap)
 }
 
 namespace concepts {
-VALUE_DATA_DEFINE_ENUM(login_state, (logged_out)(logged_in));
-VALUE_DATA_DEFINE_FIELD(username, std::string);
-VALUE_DATA_DEFINE_FIELD(password_hash, std::string);
-VALUE_DATA_DEFINE_FIELD(last_seen, boost::posix_time::ptime);
-VALUE_DATA_DEFINE_FIELD(session_cookie, boost::uuids::uuid);
-VALUE_DATA_DEFINE_FIELD(biography, std::string);
+    VALUE_DATA_DEFINE_ENUM(login_state, (logged_out)(logged_in));
+    VALUE_DATA_DEFINE_FIELD(username, std::string);
+    VALUE_DATA_DEFINE_FIELD(password_hash, std::string);
+    VALUE_DATA_DEFINE_FIELD(last_seen, boost::posix_time::ptime);
+    VALUE_DATA_DEFINE_FIELD(session_cookie, boost::uuids::uuid);
+    VALUE_DATA_DEFINE_FIELD(biography, std::string);
 }
 
 #define DEFINE_IDENTIFIER(Identifier) \
@@ -67,37 +69,128 @@ static constexpr auto identifier() { return value::immutable::string(#Identifier
 
 #define DEFINE_COLUMN(ColumnName, Storage) \
 struct ColumnName { \
-    DEFINE_IDENTIFIER(ColumnName); \
-    using storage_type = Storage; \
+DEFINE_IDENTIFIER(ColumnName); \
+using storage_type = Storage; \
 }
 
-struct session_table
+
+#define IDENTIFIED_BY(Identifier) static const auto constexpr identifier() { return value::immutable::string(#Identifier); }
+
+template<class Tag, class Definition>
+struct column
 {
-    DEFINE_COLUMN(login_state, value::data::default_storage<concepts::login_state>);
-    DEFINE_COLUMN(password_hash, value::data::default_storage<concepts::password_hash>);
-    DEFINE_COLUMN(username, value::data::default_storage<concepts::username>);
-    DEFINE_COLUMN(last_seen, value::data::default_storage<concepts::last_seen>);
-    DEFINE_COLUMN(session_cookie, value::data::default_storage<concepts::session_cookie>);
+    using tag_type = Tag;
+    using data_type = Definition;
     
-    using biography_storage = value::data::string_storage<concepts::biography, value::data::unlimited_length, value::data::nullable>;
-    DEFINE_COLUMN(biography, biography_storage);
-    
-    using columns = std::tuple<login_state, password_hash, username, last_seen, session_cookie, biography>;
-    using primary_key = std::tuple<session_cookie>;
+    static constexpr auto identifier() { return tag_type::identifier(); }
 };
+
+
+template<class Tag>
+struct table {
+    using tag_type = Tag;
+};
+
+template<class...Columns>
+struct column_list
+{
+    
+};
+
+
+struct tbl_session_definition
+{
+    struct login_state : value::data::column<login_state, value::data::default_storage<concepts::login_state> >
+    {
+        IDENTIFIED_BY(login_state);
+    };
+    
+    struct password_hash : value::data::column<password_hash, value::data::default_storage<concepts::password_hash> >
+    {
+        IDENTIFIED_BY(password_hash);
+    };
+    
+    struct username : value::data::column<username, value::data::default_storage<concepts::username> >
+    { IDENTIFIED_BY(username); };
+    
+    struct last_seen : value::data::column<last_seen, value::data::default_storage<concepts::last_seen> >
+    { IDENTIFIED_BY(last_seen); };
+    
+    struct session_cookie : value::data::column<session_cookie, value::data::default_storage<concepts::session_cookie> >
+    { IDENTIFIED_BY(session_cookie)};
+    
+    using columns = value::data::column_list<login_state, password_hash>;
+    
+    using primary_key = value::data::index<value::data::column_ref<session_cookie>>;
+    
+    using indexes = value::data::index_list<>;
+};
+
+struct tbl_session : tbl_session_definition,
+value::data::table<tbl_session,
+tbl_session_definition::columns,
+tbl_session_definition::primary_key,
+tbl_session_definition::indexes>
+{
+    IDENTIFIED_BY(tbl_session);
+};
+
+
 /*
-struct session_table
-: value::data::table_entity
-<
-value::data::field_list<session_cookie, login_state, username, password_hash, last_seen>,
-value::data::index< value::data::ascending<session_cookie> >,
-value::data::index_list<>
->
-{
-    
-};
+ static constexpr auto session_table = make_table_entity("tbl_session"),
+ make_columns(make_column("login_state", value::data::default_storage<concepts::login_state>)),
+ make_primary_key(),
+ make_indexes()));
+ {
+ DEFINE_IDENTIFIER("tbl_session");
+ DEFINE_COLUMN(login_state, value::data::default_storage<concepts::login_state>);
+ DEFINE_COLUMN(password_hash, value::data::default_storage<concepts::password_hash>);
+ DEFINE_COLUMN(username, value::data::default_storage<concepts::username>);
+ DEFINE_COLUMN(last_seen, value::data::default_storage<concepts::last_seen>);
+ DEFINE_COLUMN(session_cookie, value::data::default_storage<concepts::session_cookie>);
+ 
+ using biography_storage = value::data::string_storage<concepts::biography, value::data::unlimited_length, value::data::nullable>;
+ DEFINE_COLUMN(biography, biography_storage);
+ 
+ using columns = std::tuple<login_state, password_hash, username, last_seen, session_cookie, biography>;
+ using primary_key = std::tuple<session_cookie>;
+ };
  */
+/*
+ struct session_table
+ : value::data::table_entity
+ <
+ value::data::field_list<session_cookie, login_state, username, password_hash, last_seen>,
+ value::data::index< value::data::ascending<session_cookie> >,
+ value::data::index_list<>
+ >
+ {
+ 
+ };
+ */
+
+struct nothing {
+    virtual void foo() = 0;
+    virtual ~nothing() = default;
+};
+
+struct something : nothing {
+    void foo() override
+    {
+        static constexpr auto login_state_def = tbl_session::login_state();
+        emit(login_state_def.identifier());
+    }
+};
+std::unique_ptr<nothing> make_something(std::string s)
+{
+    if (s == "something")
+        return std::unique_ptr<nothing> { new something };
+    else
+        throw std::logic_error("error");
+}
+
 TEST(testStorage, testBasics)
 {
-    
+    std::istringstream ss("something");
+    make_something(ss.str())->foo();
 }
