@@ -2,6 +2,9 @@
 #include <cstddef>
 #include <utility>
 #include <boost/operators.hpp>
+#include <cstring>
+#include <string>
+#include <ostream>
 
 namespace value { namespace immutable {
 
@@ -44,7 +47,7 @@ namespace value { namespace immutable {
                 return string_type<Length + RLength-1>(buf);
             }
             
-            const char* c_str() const noexcept { return _data; }
+            constexpr const char* c_str() const noexcept { return _data; }
             constexpr char at(size_t i) const {
                 return _data[i];
             }
@@ -54,6 +57,12 @@ namespace value { namespace immutable {
         private:
             char _data[Length+1];
         };
+
+        template<std::size_t Length>
+        inline constexpr std::ostream& operator<<(std::ostream& os, const string_type<Length>& str)
+        {
+            return os.write(str.c_str(), str.size());
+        }
         
         template<std::size_t L, std::size_t R>
         bool operator==(const string_type<L>& l, const string_type<R>& r)
@@ -93,8 +102,7 @@ namespace value { namespace immutable {
     template<std::size_t Length>
     constexpr auto string(const char (&source) [Length])
     {
-        auto s = string_type<Length-1>(source);
-        return s;
+        return string_type<Length-1>(source);
     }
     
     template<std::size_t Length>

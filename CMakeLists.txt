@@ -16,6 +16,7 @@ find_package(GTest)
 
 include(cmake/add_sources.cmake)
 add_subdirectory(immutable)
+add_subdirectory(data)
 add_subdirectory(pointers)
 add_subdirectory(stdext)
 
