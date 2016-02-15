@@ -11,6 +11,7 @@ namespace value { namespace debug {
         using ptr_type = std::unique_ptr<char, void(*)(void*)>;
         demangled_string(ptr_type&& ptr) noexcept;
         const char* c_str() const;
+        operator std::string() const;
 
         std::ostream& write(std::ostream& os) const;
     private:
@@ -39,6 +40,8 @@ namespace value { namespace debug {
     demangled_string this_classname(T*) {
         return demangle(typeid(T));
     }
+    
+    std::string strip_nested(const std::string& demangled_name);
     
     
 

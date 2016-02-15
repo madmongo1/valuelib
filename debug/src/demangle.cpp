@@ -2,6 +2,7 @@
 #include <cxxabi.h>
 #include <cassert>
 #include <cstring>
+#include <regex>
 
 namespace value { namespace debug {
   
@@ -28,6 +29,10 @@ namespace value { namespace debug {
         else {
             return _ptr.get();
         }
+    }
+    
+    demangled_string::operator std::string() const {
+        return std::string(c_str());
     }
     
     
@@ -71,6 +76,26 @@ namespace value { namespace debug {
     demangled_string demangle(std::type_index type)
     {
         return demangle(type.name());
+    }
+    
+    std::string strip_nested(const std::string& s)
+    {
+        static const std::regex libcplusplus("^std::__nested<(.*)>$");
+        static const auto boost = std::regex("^boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<(.*)> >$");
+        std::smatch match;
+        if (std::regex_match(s, match, libcplusplus))
+        {
+            return match[1].str();
+        }
+        else if (std::regex_match(s, match, boost))
+        {
+            return match[1].str();
+
+        }
+        else
+        {
+            return s;
+        }
     }
 
 }}
