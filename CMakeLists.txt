@@ -15,6 +15,7 @@ endif()
 find_package(GTest)
 
 include(cmake/add_sources.cmake)
+add_subdirectory(debug)
 add_subdirectory(immutable)
 add_subdirectory(data)
 add_subdirectory(pointers)
