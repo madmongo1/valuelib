@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstring>
 #include <regex>
+#include <boost/optional.hpp>
 
 namespace value { namespace debug {
   
@@ -78,24 +79,39 @@ namespace value { namespace debug {
         return demangle(type.name());
     }
     
-    std::string strip_nested(const std::string& s)
+    template<class Iter>
+    boost::optional<std::string> strip_impl(Iter first, Iter last)
     {
         static const std::regex libcplusplus("^std::__nested<(.*)>$");
         static const auto boost = std::regex("^boost::exception_detail::clone_impl<boost::exception_detail::error_info_injector<(.*)> >$");
-        std::smatch match;
-        if (std::regex_match(s, match, libcplusplus))
+        
+        using match_type = std::match_results<Iter>;
+        match_type match;
+        if (std::regex_match(first, last, match, libcplusplus))
         {
             return match[1].str();
         }
-        else if (std::regex_match(s, match, boost))
+        else if (std::regex_match(first, last, match, boost))
         {
             return match[1].str();
+        }
+        return boost::none;
+    }
 
-        }
-        else
-        {
-            return s;
-        }
+    std::string strip_nested(const char* s)
+    {
+        auto opt = strip_impl(s, s + strlen(s));
+        return opt.value_or(s);
+    }
+    
+    std::string strip_nested(demangled_string s)
+    {
+        return strip_nested(s.c_str());
+    }
+
+    std::string strip_nested(std::string s)
+    {
+        return strip_impl(begin(s), end(s)).value_or(std::move(s));
     }
 
 }}
