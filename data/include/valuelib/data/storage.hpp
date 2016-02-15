@@ -1,7 +1,7 @@
 #pragma once
 #include "field.hpp"
 #include <boost/uuid/uuid.hpp>
-#include <boost/date_time/posix_time/ptime.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/optional.hpp>
 #include "metafunctions.hpp"
 #include <type_traits>

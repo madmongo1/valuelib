@@ -49,7 +49,7 @@ namespace value { namespace data { namespace sql { namespace mysql {
     constexpr auto to_sql(value::data::uuid_storage<NativeType, Nullable> uuid)
     {
         return
-        value::immutable::string(" UUID ") +
+        value::immutable::string(" VARCHAR(36) ") +
         to_sql(uuid.nullable());
     }
     
