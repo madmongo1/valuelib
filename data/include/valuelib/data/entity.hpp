@@ -1,5 +1,6 @@
 #pragma once
 #include "column.hpp"
+#include "metafunctions.hpp"
 
 namespace value { namespace data {
  
@@ -81,6 +82,14 @@ namespace value { namespace data {
         static constexpr auto primary_key(){ return value::data::primary_key_type<PrimaryKeyIndex>(); }
         
         using index_list_type = Indexes;
-        
     };
+    /// override metafunctions for a table
+    namespace metafunction { namespace impl {
+        template<class Identifier, class ColumnList, class PrimaryKeys, class Indexes>
+        struct entity_dependencies< table<Identifier, ColumnList, PrimaryKeys, Indexes> >
+        {
+            // a table has no dependencies. It is the base item
+            using result = std::tuple<>;
+        };
+    }}
 }}

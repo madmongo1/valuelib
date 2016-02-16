@@ -13,7 +13,22 @@ namespace value { namespace data {
 		template<class Entity>
         using native_arg_type = typename impl::native_arg_type<Entity>::result;
 
+        
+        ///
+        /// get a list of entity types that this entity depends on
+        ///
+        namespace impl {
+            template<class Entity>
+            struct entity_dependencies
+            {
+//                using result = std::tuple<>;
+            };
+        }
+        
+        template<class Entity> using entity_dependencies =
+        typename impl::entity_dependencies<Entity>::result;
 
+        
 
-}
+    }
 }}
