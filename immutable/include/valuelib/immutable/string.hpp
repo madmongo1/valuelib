@@ -64,6 +64,11 @@ namespace value { namespace immutable {
                 return this->concat(r);
             }
             
+            using char_array = const char (&)[Length + 1];
+            constexpr operator char_array() const {
+                return _data;
+            }
+            
         private:
             char _data[Length+1];
         };
