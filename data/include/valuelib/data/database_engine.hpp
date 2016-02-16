@@ -9,13 +9,11 @@
 namespace value { namespace data {
     
     template<class DatabaseEngine>
-    struct database_engine_traits
-    {
+    struct database_traits;
         // concepts:
         
         // using ddl_statement_type =
-        // using connection_type =  
-        
-    };
+        // using connection_type =
+    // database_type =
     
 }}
