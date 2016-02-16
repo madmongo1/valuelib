@@ -6,10 +6,10 @@ namespace value { namespace data {
     ///
     /// The concept of an identifier
     ///
-    template<class NameLength>
+    template<std::size_t NameLength>
     struct identifier_type
     {
-        static constexpr value::immutable::string<NameLength> identifier();
+//         static constexpr value::immutable::string<NameLength> identifier();
     };
 
 }}

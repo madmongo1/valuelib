@@ -1,5 +1,6 @@
 #pragma once
 #include "field.hpp"
+#include "enumeration.hpp"
 #include <boost/uuid/uuid.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/optional.hpp>
