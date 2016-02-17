@@ -79,7 +79,7 @@ using storage_type = Storage; \
 #define IDENTIFIED_BY(Identifier) static const auto constexpr identifier() { return value::immutable::string(#Identifier); }
 
 
-struct tbl_session
+struct tbl_session : value::data::table<tbl_session>
 {
     IDENTIFIED_BY(tbl_session);
 
@@ -100,28 +100,30 @@ struct tbl_session
     struct session_cookie_tag { IDENTIFIED_BY(session_cookie); };
     using session_cookie = value::data::column<session_cookie_tag, value::data::default_storage<concepts::session_cookie> >;
     
-    using columns = value::data::column_list<session_cookie, login_state, last_seen>;
-    
-    using primary_key = value::data::index<value::data::column_ref<session_cookie>>;
+    static constexpr auto columns() { return std::make_tuple(session_cookie(),
+                                                             login_state(),
+                                                             last_seen()); }
+
+    static constexpr auto primary_key() {
+        return std::make_tuple(value::data::column_ref<session_cookie>());
+    }
     
     using indexes = value::data::index_list<>;
     
-    using layout = value::data::table<tbl_session,
-    columns,
-    primary_key,
-    indexes>;
 };
+
 
 TEST(testStorage, testBasics)
 {
     using namespace std::string_literals;
     
-    static constexpr auto sql_create = value::data::sql::mysql::sql_create(tbl_session::layout());
+    static constexpr auto sql_create = value::data::sql::mysql::sql_create(tbl_session());
     EXPECT_EQ("CREATE TABLE IF NOT EXISTS `tbl_session`(\n"
-              "`session_cookie` UUID NOT NULL,\n"
+              "`session_cookie` VARCHAR(36) NOT NULL,\n"
               "`login_state` SET('logged_out','logged_in') NOT NULL DEFAULT 'logged_out',\n"
               "`last_seen` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n"
               "PRIMARY KEY (`session_cookie`)\n"
-              ") ENGINE=InnoDB DEFAULT CHARSET=utf8"s,
+              ") ENGINE=InnoDB DEFAULT CHARSET=utf8",
               sql_create);
+    
 }

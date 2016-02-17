@@ -65,7 +65,7 @@ namespace value { namespace immutable {
             }
             
             using char_array = const char (&)[Length + 1];
-            constexpr operator char_array() const {
+            explicit constexpr operator char_array() const {
                 return _data;
             }
             
