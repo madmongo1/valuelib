@@ -28,6 +28,7 @@ SOURCE_GROUP_BY_FOLDER(${ALL_SRCS})
 BINARY_GROUP_BY_FOLDER(${ALL_BINARIES})
 
 add_library(ValueLib_immutable ${INTERFACE_FILES} ${SOURCE_FILES})
+target_link_libraries(ValueLib_immutable ValueLib_debug)
 target_include_directories(ValueLib_immutable 
 SYSTEM PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

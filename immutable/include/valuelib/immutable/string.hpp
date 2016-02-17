@@ -13,16 +13,17 @@ namespace value { namespace immutable {
         template<std::size_t Length>
         struct string_type
         {
-            constexpr string_type(const char* buffer)
+            constexpr string_type(const char(&buffer)[Length+1])
             : _data {}
             {
-                for(std::size_t i = 0 ; i < Length ; ++i)
+                for(std::size_t i = 0 ; i < Length ; ++i) {
                     _data[i] = buffer[i];
+                }
                 _data[Length] = 0;
             }
 
             template<std::size_t RLength>
-            constexpr auto concat(const string_type<RLength>& r) const
+            constexpr auto concat(string_type<RLength> r) const
             {
                 char buf [Length + RLength + 1] = { 0 };
                 for (size_t i = 0 ; i < Length ; ++i) {
@@ -79,6 +80,7 @@ namespace value { namespace immutable {
             char _data[Length+1];
         };
         
+        
         template<std::size_t Length>
         std::string to_string(const string_type<Length>& str)
         {
@@ -123,8 +125,17 @@ namespace value { namespace immutable {
             return r == l;
         }
     }
-    template<std::size_t N>
-    using string_type = detail::string_type<N>;
+    template<std::size_t N> using string_type = detail::string_type<N>;
+    template<class T> struct is_immutable_string : std::false_type {};
+    template<std::size_t N> struct is_immutable_string<string_type<N>> : std::true_type {};
+    template<class T> static constexpr bool is_immutable_string_v = is_immutable_string<T>::value;
+    template<class T> using EnableForImmutableString = std::enable_if_t<is_immutable_string_v<T>>*;
+    
+    template<class String, EnableForImmutableString<String> = nullptr>
+    constexpr auto begin(const String& s) { return s.begin(); }
+
+    template<class String, EnableForImmutableString<String> = nullptr>
+    constexpr auto end(const String& s) { return s.end(); }
     
     template<std::size_t Length>
     constexpr auto string(const char (&source) [Length])
@@ -212,11 +223,25 @@ namespace value { namespace immutable {
         return joiner.apply(string(delimeter), strings);
     }
     
-    
-    
-    template<std::size_t InitialLength>
-    constexpr auto quoted(value::immutable::string_type<InitialLength> in)
+    constexpr std::size_t count(const char* first, const char* last, char c)
     {
+        std::size_t count = 0;
+        while (first != last)
+            if (*first++ == c)
+                ++count;
+        return count;
+    }
+    
+    template<class String, EnableForImmutableString<String> = nullptr>
+    constexpr auto quoted(String in)
+    {
+        if (count(begin(in), end(in), '\''))
+            throw std::invalid_argument("It is not possible to enquote an immutable string that contains"
+                                        " quotes (\"'\" characters). The short story is that the string "
+                                        "length is part of the type and therefore must be formed from a "
+                                        "constexpr literal. ALthough a character array is a literal, "
+                                        "the individual characters in it are not."
+                                        );
         return value::immutable::string("'") + in + "'";
     }
     
