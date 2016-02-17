@@ -8,45 +8,8 @@
 namespace value { namespace data { namespace sql { namespace mysql {
     
     // forward declaration
-    constexpr auto to_sql();
-    template<class T> constexpr auto to_sql(T);
-    
-    template<class Identifier, class Storage, class DefaultValue>
-    constexpr auto to_sql(value::data::column<Identifier, Storage, DefaultValue> column);
-    template<class Column>
-    constexpr auto to_sql(value::data::column_ref<Column> column_ref);
-    
-    template<class Function, class...Ts> constexpr auto map(Function func, std::tuple<Ts...> t);
-    
-    namespace functor {
-        struct to_sql
-        {
-            template<class T> constexpr auto operator()(T t) const { return value::data::sql::mysql::to_sql(t); }
-        };
-    }
-    
-    constexpr auto to_sql()
-    {
-        return functor::to_sql();
-    }
-    
-    namespace functor
-    {
-        template<class Function, class Tuple, std::size_t...Is>
-        constexpr auto map(Function func, Tuple t, std::integer_sequence<std::size_t, Is...>)
-        {
-            return std::make_tuple(func(std::get<Is>(t))...);
-        }
-    }
-    
-    template<class Function, class...Ts>
-    constexpr auto map(Function func, std::tuple<Ts...> t)
-    {
-        return functor::map(func, t, std::index_sequence_for<Ts...>());
-    }
-
-    
-
+//    constexpr auto to_sql();
+//    template<class T, typename = void> constexpr auto to_sql(T);
     
     // nullable
     constexpr auto to_sql(value::data::nullable)
@@ -70,7 +33,7 @@ namespace value { namespace data { namespace sql { namespace mysql {
     {
         return value::immutable::string(" DEFAULT CURRENT_TIMESTAMP");
     }
-
+    
     template<class NativeType, class Nullable>
     constexpr auto to_sql(value::data::default_from_native,
                           value::data::text_set_storage<NativeType, Nullable> text_set)
@@ -104,8 +67,8 @@ namespace value { namespace data { namespace sql { namespace mysql {
         + to_sql(text_set.nullable());
     }
     
-    template<class Identifier, class Storage, class DefaultValue>
-    constexpr auto to_sql(value::data::column<Identifier, Storage, DefaultValue> column)
+    template<class Column, std::enable_if_t<is_column_v<Column>>* = nullptr>
+    constexpr auto to_sql(Column column)
     {
         return
         backtick(column.identifier()) +
@@ -113,12 +76,51 @@ namespace value { namespace data { namespace sql { namespace mysql {
         to_sql(column.default_value(), column.storage());
     }
     
+
+    template<class Column>
+    constexpr auto to_sql(value::data::column_ref<Column> column_ref);
+    
+    template<class Function, class...Ts> constexpr auto map(Function func, std::tuple<Ts...> t);
+    
+    namespace functor {
+        struct call_to_sql
+        {
+            template<class T> constexpr auto operator()(T t) const {
+                return to_sql(t);
+//                return to_sql(t);
+            }
+        };
+    }
+    
+    constexpr auto call_to_sql()
+    {
+        return functor::call_to_sql();
+    }
+    
+    namespace functor
+    {
+        template<class Function, class Tuple, std::size_t...Is>
+        constexpr auto map(Function func, Tuple t, std::integer_sequence<std::size_t, Is...>)
+        {
+            return std::make_tuple(func(std::get<Is>(t))...);
+        }
+    }
+    
+    template<class Function, class...Ts>
+    constexpr auto map(Function func, std::tuple<Ts...> t)
+    {
+        return functor::map(func, t, std::index_sequence_for<Ts...>());
+    }
+
+    
+
+    
     template<class...Expressions, typename std::enable_if_t<sizeof...(Expressions) != 0>* = nullptr>
     constexpr auto primary_key_clause(std::tuple<Expressions...> tuple)
     {
         return
         value::immutable::string(",\nPRIMARY KEY (") +
-        value::immutable::join(", ", map(to_sql(), tuple)) +
+        value::immutable::join(", ", map(call_to_sql(), tuple)) +
         ")";
     }
     
@@ -145,7 +147,7 @@ namespace value { namespace data { namespace sql { namespace mysql {
     template<class...Expressions>
     constexpr auto to_sql(value::data::index<Expressions...> idx)
     {
-        return value::immutable::join(", ", map(to_sql(), idx.as_tuple()));
+        return value::immutable::join(", ", map(call_to_sql(), idx.as_tuple()));
     }
     
     template<class Index>
@@ -163,7 +165,7 @@ namespace value { namespace data { namespace sql { namespace mysql {
     {
         constexpr auto sql = immutable::string("CREATE TABLE IF NOT EXISTS ") +
         backtick(table.identifier()) + "(\n"
-        + value::immutable::join(",\n", map(to_sql(), table.columns()))
+        + value::immutable::join(",\n", map(call_to_sql(), table.columns()))
         + primary_key_clause(table.primary_key())
         + "\n) ENGINE=InnoDB DEFAULT CHARSET=utf8";
         return sql;

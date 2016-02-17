@@ -6,7 +6,7 @@ namespace value { namespace data {
 	/// Return the type of the native type of an entity.
 	/// The native type is the type thr eprogram should use to  progive this value as an argument
 		namespace impl {
-			template<class Entity>
+			template<class Entity, typename = void>
 			struct native_arg_type;
 		}
 

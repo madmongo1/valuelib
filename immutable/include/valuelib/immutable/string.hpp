@@ -53,6 +53,8 @@ namespace value { namespace immutable {
             }
             
             constexpr static auto size() { return Length; }
+            constexpr const char* begin() const { return _data; }
+            constexpr const char* end() const { return _data + size(); }
             
             template<std::size_t RLen>
             constexpr auto operator+(string_type<RLen> r) const {
@@ -69,9 +71,19 @@ namespace value { namespace immutable {
                 return _data;
             }
             
+            explicit operator std::string() const {
+                return std::string(begin(), end());
+            }
+            
         private:
             char _data[Length+1];
         };
+        
+        template<std::size_t Length>
+        std::string to_string(const string_type<Length>& str)
+        {
+            return std::string(str);
+        }
 
         template<std::size_t Length>
         inline constexpr std::ostream& operator<<(std::ostream& os, string_type<Length> str)

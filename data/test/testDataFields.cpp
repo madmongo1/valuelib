@@ -9,6 +9,7 @@
 #include <valuelib/data/entity.hpp>
 
 #include <valuelib/data/sql/mysql/create.hpp>
+#include <valuelib/data/identifier.hpp>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -83,22 +84,23 @@ struct tbl_session : value::data::table<tbl_session>
 {
     IDENTIFIED_BY(tbl_session);
 
-    struct login_state_identifier { IDENTIFIED_BY(login_state); };
-    using login_state = value::data::column<
-    login_state_identifier,
-    value::data::default_storage<concepts::login_state>,
-    value::data::default_from_native
-    >;
-
-    struct last_seen_identifier { IDENTIFIED_BY(last_seen); };
-    using last_seen = value::data::column<
-    last_seen_identifier,
-    value::data::default_storage<concepts::last_seen>,
-    value::data::current_timestamp
-    >;
+    struct login_state : value::data::column<login_state> {
+        VALUE_DATA_IDENTIFIED_BY(login_state);
+        static constexpr auto storage() { return value::data::default_storage<concepts::login_state>(); }
+        static constexpr auto default_value() { return value::data::default_from_native(); }
+    };
     
-    struct session_cookie_tag { IDENTIFIED_BY(session_cookie); };
-    using session_cookie = value::data::column<session_cookie_tag, value::data::default_storage<concepts::session_cookie> >;
+
+    struct last_seen : value::data::column<last_seen> {
+        VALUE_DATA_IDENTIFIED_BY(last_seen);
+        static constexpr auto storage() { return value::data::default_storage<concepts::last_seen>(); }
+        static constexpr auto default_value() { return value::data::current_timestamp(); }
+    };
+    
+    struct session_cookie : value::data::column<session_cookie> {
+        VALUE_DATA_IDENTIFIED_BY(session_cookie);
+        static constexpr auto storage() { return value::data::default_storage<concepts::session_cookie>(); }
+    };
     
     static constexpr auto columns() { return std::make_tuple(session_cookie(),
                                                              login_state(),
@@ -111,7 +113,6 @@ struct tbl_session : value::data::table<tbl_session>
     using indexes = value::data::index_list<>;
     
 };
-
 
 TEST(testStorage, testBasics)
 {

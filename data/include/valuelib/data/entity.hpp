@@ -2,6 +2,7 @@
 #include "column.hpp"
 #include "metafunctions.hpp"
 #include <utility>
+#include "type_traits.hpp"
 
 namespace value { namespace data {
  
@@ -77,24 +78,9 @@ namespace value { namespace data {
         static constexpr auto indexes() { return std::make_tuple(); }
     };
     
-    namespace detail {
-        template <typename T, template <typename, typename...> class Tmpl>  // #1 see note
-        struct is_derived
-        {
-            typedef char yes[1];
-            typedef char no[2];
-            
-            static no & test(...);
-            
-            template <typename U>
-            static yes & test(Tmpl<U> const &);
-            
-            static bool constexpr value = sizeof(test(std::declval<T>())) == sizeof(yes);
-        };
-    }
     template<class T, typename = void> struct is_table : std::false_type {};
     template<class Type>
-    struct is_table<Type, std::enable_if_t<detail::is_derived<Type, table>::value>> : std::true_type {};
+    struct is_table<Type, std::enable_if_t<is_derived_from_template_v<Type, table>>> : std::true_type {};
     template<class T> static constexpr bool is_table_v = is_table<T>::value;
 
     

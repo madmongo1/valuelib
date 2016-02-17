@@ -15,13 +15,13 @@ namespace value { namespace data { namespace connectors {
         {
             namespace impl
             {
-                template<class EntityType> struct connector_type;
+                template<class EntityType, typename = void> struct connector_type;
 
-                template<class Identifier, class Storage>
-                struct connector_type<data::column<Identifier, Storage>>
+                template<class Column>
+                struct connector_type<Column, std::enable_if_t< is_column_v<Column> > >
                 {
-                    using column_type = data::column<Identifier, Storage>;
-                    using storage_type = typename column_type::storage_type;
+                    using column_type = Column;
+                    using storage_type = decltype(column_type::storage());
                     using result = typename connector_type<storage_type>::result;
                 };
 

@@ -3,6 +3,7 @@ add_subdirectory(ptree)
 add_subdirectory(sql)
 add_sources(
 CMakeLists.txt
+type_traits.hpp
 metafunctions.hpp
 enumeration.hpp
 field.hpp
