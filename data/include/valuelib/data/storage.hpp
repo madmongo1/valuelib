@@ -6,6 +6,7 @@
 #include <boost/optional.hpp>
 #include "metafunctions.hpp"
 #include <type_traits>
+#include "deduce_native.hpp"
 
 namespace value { namespace data {
     
@@ -75,8 +76,20 @@ namespace value { namespace data {
         using length_limit_type = LengthLimit;
         using nullable_type = Nullable;
         using native_type = NativeType;
-        
     };
+    
+    template<class NativeType, class LengthLimit>
+    struct deduce_native_argument<string_storage<NativeType, LengthLimit, not_null>>
+    {
+        using result = NativeType;
+    };
+    
+    template<class NativeType, class LengthLimit>
+    struct deduce_native_argument<string_storage<NativeType, LengthLimit, nullable>>
+    {
+        using result = boost::optional<NativeType>;
+    };
+
     
     template<class NativeType, class Nullable>
     struct uuid_storage : implement_nullable<Nullable>
@@ -102,6 +115,18 @@ namespace value { namespace data {
         };
     }}
     
+    template<class NativeType>
+    struct deduce_native_argument<uuid_storage<NativeType, not_null>>
+    {
+        using result = NativeType;
+    };
+    
+    template<class NativeType>
+    struct deduce_native_argument<uuid_storage<NativeType, nullable>>
+    {
+        using result = boost::optional<NativeType>;
+    };
+    
     template<class NativeType, class Nullable = not_null, class DefaultValue = no_default>
     struct timestamp_storage : implement_nullable<Nullable>
     {
@@ -112,7 +137,19 @@ namespace value { namespace data {
         using nullable_type = Nullable;
         using native_type = NativeType;
     };
+
+    template<class NativeType>
+    struct deduce_native_argument<timestamp_storage<NativeType, not_null>>
+    {
+        using result = NativeType;
+    };
     
+    template<class NativeType>
+    struct deduce_native_argument<timestamp_storage<NativeType, nullable>>
+    {
+        using result = boost::optional<NativeType>;
+    };
+
     ///
     /// @tparam NativeType is the type that the program will use to manipulate the data
     /// @tparam Nullable is the type that describes whether the field may be null.
@@ -128,7 +165,18 @@ namespace value { namespace data {
         
         static constexpr auto get_native_type() { return NativeType(); }
         static constexpr auto strings() { return get_native_type().strings(); }
-
+    };
+    
+    template<class NativeType>
+    struct deduce_native_argument<text_set_storage<NativeType, not_null>>
+    {
+        using result = NativeType;
+    };
+    
+    template<class NativeType>
+    struct deduce_native_argument<text_set_storage<NativeType, nullable>>
+    {
+        using result = boost::optional<NativeType>;
     };
     
     namespace detail
@@ -173,6 +221,7 @@ namespace value { namespace data {
         };
     }
     template<class Field> using default_storage = typename detail::default_storage<Field>::type;
+    
     
     
     

@@ -35,5 +35,13 @@ namespace value { namespace data { namespace database {
 		/// return a vector of references to entities that this one depends on
 		virtual const dependency_list_type& dependencies() const = 0;
 	};
+    
+    ///
+    /// Construct the low-level entity descriptor for a given component or concept
+    ///
+    template<class Component, class Database>
+    const entity<Database>& get_entity();
+    
+    
 
 }}}

@@ -11,6 +11,8 @@
 #include <valuelib/data/sql/mysql/dialect.hpp>
 #include <valuelib/data/identifier.hpp>
 
+#include <valuelib/debug/demangle.hpp>
+
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -151,5 +153,31 @@ TEST(testStorage, testBasics)
               ",\nPRIMARY KEY (`session_cookie`)\n"
               ") ENGINE=InnoDB DEFAULT CHARSET=utf8",
               sql_create);
+    
+}
+
+TEST(testStorage, testNativeDeduction)
+{
+    using session_cookie_native = value::data::DeduceNativeArgument<tbl_session::session_cookie>;
+    
+    EXPECT_STREQ(typeid(concepts::session_cookie).name(),
+                 typeid(session_cookie_native).name()) << value::debug::demangle(typeid(session_cookie_native));
+    
+    using user_id_native = value::data::DeduceNativeArgument<tbl_session::user_id>;
+    
+    EXPECT_STREQ(typeid(boost::optional<concepts::user_id>).name(),
+                 typeid(user_id_native).name()) << value::debug::demangle(typeid(user_id_native));
+    
+    using cols = decltype(tbl_session::columns());
+    using native_cols = value::data::DeduceNativeArguments<cols>;
+    EXPECT_STREQ(typeid(std::tuple<
+                        concepts::session_cookie,
+                        concepts::login_state,
+                        concepts::session_mru,
+                        boost::optional<concepts::user_id>
+                        >).name(),
+                 typeid(native_cols).name()) << value::debug::demangle(typeid(native_cols).name());
+    
+    
     
 }

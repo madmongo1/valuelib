@@ -47,11 +47,11 @@ template<class L, class R, typename = decltype(std::declval<L>() Symbol std::dec
         field_type() : _value() {};
         
         template<
-        class Arg,
-        typename std::enable_if_t<std::is_constructible<value_type,Arg>::value>* = nullptr
+        class...Args,
+        typename std::enable_if_t<std::is_constructible<value_type, Args...>::value>* = nullptr
         >
-        explicit field_type(Arg&& arg)
-        : _value(std::forward<Arg>(arg))
+        explicit field_type(Args&&... args)
+        : _value(std::forward<Args>(args)...)
         {}
         
         value_type const& value() const { return _value; }

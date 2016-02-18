@@ -13,4 +13,5 @@ storage.hpp
 entity.hpp
 column.hpp
 database_engine.hpp
+deduce_native.hpp
 )

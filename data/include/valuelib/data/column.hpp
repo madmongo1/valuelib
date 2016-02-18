@@ -3,6 +3,7 @@
 #include "storage.hpp"
 
 #include "type_traits.hpp"
+#include "deduce_native.hpp"
 
 namespace value { namespace data {
 
@@ -44,6 +45,11 @@ namespace value { namespace data {
     struct is_column<Type, std::enable_if_t<is_derived_from_template_v<Type, column>>> : std::true_type {};
     template<class T> static constexpr bool is_column_v = is_column<T>::value;
     
+    template<class Column>
+    struct deduce_native_argument<Column, std::enable_if_t< is_column_v<Column> > >
+    {
+        using result = DeduceNativeArgument<decltype(Column::storage())>;
+    };
     
     namespace metafunction { namespace impl {
         
