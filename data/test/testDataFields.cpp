@@ -8,7 +8,7 @@
 #include <valuelib/data/storage.hpp>
 #include <valuelib/data/entity.hpp>
 
-#include <valuelib/data/sql/mysql/create.hpp>
+#include <valuelib/data/sql/mysql/dialect.hpp>
 #include <valuelib/data/identifier.hpp>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -60,9 +60,9 @@ TEST(testDataItem, testMap)
 
 namespace concepts {
     VALUE_DATA_DEFINE_ENUM(login_state, (logged_out)(logged_in));
-    VALUE_DATA_DEFINE_FIELD(username, std::string);
+    VALUE_DATA_DEFINE_FIELD(user_id, std::string);
     VALUE_DATA_DEFINE_FIELD(password_hash, std::string);
-    VALUE_DATA_DEFINE_FIELD(last_seen, boost::posix_time::ptime);
+    VALUE_DATA_DEFINE_FIELD(session_mru, boost::posix_time::ptime);
     VALUE_DATA_DEFINE_FIELD(session_cookie, boost::uuids::uuid);
     VALUE_DATA_DEFINE_FIELD(biography, std::string);
 }
@@ -82,35 +82,59 @@ using storage_type = Storage; \
 
 struct tbl_session : value::data::table<tbl_session>
 {
-    IDENTIFIED_BY(tbl_session);
-
-    struct login_state : value::data::column<login_state> {
+    VALUE_DATA_IDENTIFIED_BY(tbl_session);
+    
+    struct login_state : value::data::column<login_state>
+    {
         VALUE_DATA_IDENTIFIED_BY(login_state);
-        static constexpr auto storage() { return value::data::default_storage<concepts::login_state>(); }
-        static constexpr auto default_value() { return value::data::default_from_native(); }
+        static constexpr auto storage() {
+            return value::data::default_storage<concepts::login_state>();
+        }
+        static constexpr auto default_value() {
+            return value::data::default_from_native();
+        }
     };
     
-
-    struct last_seen : value::data::column<last_seen> {
-        VALUE_DATA_IDENTIFIED_BY(last_seen);
-        static constexpr auto storage() { return value::data::default_storage<concepts::last_seen>(); }
-        static constexpr auto default_value() { return value::data::current_timestamp(); }
+    struct session_mru : value::data::column<session_mru> {
+        VALUE_DATA_IDENTIFIED_BY(session_mru);
+        static constexpr auto storage() {
+            return value::data::default_storage<concepts::session_mru>();
+        }
+        static constexpr auto default_value() {
+            return value::data::current_timestamp();
+        }
+        
     };
     
-    struct session_cookie : value::data::column<session_cookie> {
+    struct session_cookie : value::data::column<session_cookie>
+    {
         VALUE_DATA_IDENTIFIED_BY(session_cookie);
-        static constexpr auto storage() { return value::data::default_storage<concepts::session_cookie>(); }
+        static constexpr auto storage() {
+            return value::data::default_storage<concepts::session_cookie>();
+        }
     };
     
-    static constexpr auto columns() { return std::make_tuple(session_cookie(),
-                                                             login_state(),
-                                                             last_seen()); }
-
+    struct user_id : value::data::column<user_id>
+    {
+        VALUE_DATA_IDENTIFIED_BY(user_id);
+        static constexpr auto storage() {
+            return value::data::string_storage<
+            concepts::user_id,
+            value::data::limited_length<250>,
+            value::data::nullable>();
+        }
+    };
+    
+    static constexpr auto columns() {
+        return std::make_tuple(session_cookie(),
+                               login_state(),
+                               session_mru(),
+                               user_id());
+    }
+    
     static constexpr auto primary_key() {
         return std::make_tuple(value::data::column_ref<session_cookie>());
     }
-    
-    using indexes = value::data::index_list<>;
     
 };
 
@@ -122,8 +146,9 @@ TEST(testStorage, testBasics)
     EXPECT_EQ("CREATE TABLE IF NOT EXISTS `tbl_session`(\n"
               "`session_cookie` VARCHAR(36) NOT NULL,\n"
               "`login_state` SET('logged_out','logged_in') NOT NULL DEFAULT 'logged_out',\n"
-              "`last_seen` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n"
-              "PRIMARY KEY (`session_cookie`)\n"
+              "`session_mru` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n"
+              "`user_id` VARCHAR(250) NULL"
+              ",\nPRIMARY KEY (`session_cookie`)\n"
               ") ENGINE=InnoDB DEFAULT CHARSET=utf8",
               sql_create);
     

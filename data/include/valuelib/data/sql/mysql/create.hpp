@@ -3,6 +3,9 @@
 #include <valuelib/data/entity.hpp>
 #include <valuelib/immutable/string.hpp>
 #include "utility.hpp"
+#include <valuelib/data/storage.hpp>
+#include <valuelib/data/identifier.hpp>
+#include <valuelib/data/entity.hpp>
 #include <tuple>
 
 namespace value { namespace data { namespace sql { namespace mysql {
@@ -65,6 +68,44 @@ namespace value { namespace data { namespace sql { namespace mysql {
         + value::immutable::to_quoted_list(text_set.strings())
         + ") "
         + to_sql(text_set.nullable());
+    }
+    
+    template<class LengthLimit>
+    struct to_sql_text_field_impl;
+    
+    template<std::size_t Length>
+    struct to_sql_text_field_impl<value::data::limited_length<Length>>
+    {
+        static constexpr auto apply()
+        {
+            return immutable::string(" VARCHAR(") +
+            immutable::to_string<std::size_t, Length>() +
+            immutable::string(") ");
+        }
+    };
+    
+    template<>
+    struct to_sql_text_field_impl<value::data::unlimited_length>
+    {
+        static constexpr auto apply()
+        {
+            return value::immutable::string(" LONGTEXT ");
+        }
+    };
+    
+    template<>
+    struct to_sql_text_field_impl<value::data::reasonable_length>
+    {
+        static constexpr auto apply()
+        {
+            return value::immutable::string(" VARCHAR(128) ");
+        }
+    };
+    
+    template<class NativeType, class LengthLimit, class Nullable>
+    constexpr auto to_sql(value::data::string_storage<NativeType, LengthLimit, Nullable> storage)
+    {
+        return to_sql_text_field_impl<LengthLimit>::apply() + to_sql(Nullable());
     }
     
     template<class Column, std::enable_if_t<is_column_v<Column>>* = nullptr>
@@ -160,8 +201,9 @@ namespace value { namespace data { namespace sql { namespace mysql {
     
 
 
+    
     template<class Table, std::enable_if_t<is_table_v<Table>>* = nullptr>
-    constexpr auto sql_create(Table table)
+    constexpr auto sql_create(dialect dialect, Table table)
     {
         constexpr auto sql = immutable::string("CREATE TABLE IF NOT EXISTS ") +
         backtick(table.identifier()) + "(\n"
@@ -169,9 +211,14 @@ namespace value { namespace data { namespace sql { namespace mysql {
         + primary_key_clause(table.primary_key())
         + "\n) ENGINE=InnoDB DEFAULT CHARSET=utf8";
         return sql;
-
+        
     }
     
+    template<class Table, std::enable_if_t<is_table_v<Table>>* = nullptr>
+    constexpr auto sql_create(Table table)
+    {
+        return sql_create(dialect(), table);
+    }
 
 
 }}}}

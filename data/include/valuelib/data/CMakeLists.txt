@@ -1,6 +1,7 @@
 add_subdirectory(connectors)
 add_subdirectory(ptree)
 add_subdirectory(sql)
+add_subdirectory(database)
 add_sources(
 CMakeLists.txt
 type_traits.hpp

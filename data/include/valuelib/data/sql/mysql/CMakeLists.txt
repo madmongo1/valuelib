@@ -1,6 +1,8 @@
 add_sources(CMakeLists.txt
+dialect.hpp
+
 utility.hpp
 create.hpp
-destroy.hpp
+drop.hpp
 
 )
