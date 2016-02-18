@@ -20,6 +20,7 @@ template<class L, class R, typename = decltype(std::declval<L>() Symbol std::dec
         VALUE_DATA_OP_CHECK(le, <=)
         VALUE_DATA_OP_CHECK(gt, >)
         VALUE_DATA_OP_CHECK(ge, >=)
+        VALUE_DATA_OP_CHECK(plus_equals, +=)
         
         template<class R, typename = decltype(std::hash<std::decay_t<R>>(std::declval<R>()))>
         static constexpr auto hash() { return true; }
@@ -56,7 +57,6 @@ template<class L, class R, typename = decltype(std::declval<L>() Symbol std::dec
         value_type const& value() const { return _value; }
         operator value_type const& () const { return _value; }
         
-        
     private:
         value_type _value;
     };
@@ -74,7 +74,6 @@ template<class Tag, class Type, class Right, std::enable_if_t<op_check::Name<Typ
     VALUE_DATA_IMPLEMENT_FIELD_OPERATOR(ge, >=)
     VALUE_DATA_IMPLEMENT_FIELD_OPERATOR(ne, !=)
 
-    
     template<class Tag, class Type>
     std::ostream& operator<<(std::ostream& os, const field_type<Tag, Type>& f)
     {
