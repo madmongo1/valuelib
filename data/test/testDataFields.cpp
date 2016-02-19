@@ -168,6 +168,11 @@ TEST(testStorage, testNativeDeduction)
     EXPECT_STREQ(typeid(boost::optional<concepts::user_id>).name(),
                  typeid(user_id_native).name()) << value::debug::demangle(typeid(user_id_native));
     
+    using session_mru_native = value::data::DeduceNativeArgument<tbl_session::session_mru>;
+    
+    EXPECT_STREQ(typeid(concepts::session_mru).name(),
+                 typeid(session_mru_native).name()) << value::debug::demangle(typeid(session_mru_native));
+    
     using cols = decltype(tbl_session::columns());
     using native_cols = value::data::DeduceNativeArguments<cols>;
     EXPECT_STREQ(typeid(std::tuple<
@@ -179,5 +184,26 @@ TEST(testStorage, testNativeDeduction)
                  typeid(native_cols).name()) << value::debug::demangle(typeid(native_cols).name());
     
     
+    
+}
+
+
+TEST(testStorage, testUnderlyingType)
+{
+    using u1 = value::data::UnderlyingType<value::data::DeduceNativeArgument<tbl_session::session_cookie>>;
+    EXPECT_STREQ(typeid(boost::uuids::uuid).name(),
+                 typeid(u1).name()) << value::debug::demangle(typeid(u1));
+    
+    using u2 = value::data::UnderlyingType<value::data::DeduceNativeArgument<tbl_session::session_mru>>;
+    EXPECT_STREQ(typeid(boost::posix_time::ptime).name(),
+                 typeid(u2).name()) << value::debug::demangle(typeid(u2));
+    
+    using u3 = value::data::UnderlyingType<value::data::DeduceNativeArgument<tbl_session::login_state>>;
+    EXPECT_STREQ(typeid(concepts::login_state::value_type).name(),
+                 typeid(u3).name()) << value::debug::demangle(typeid(u3));
+    
+    using u4 = value::data::UnderlyingType<value::data::DeduceNativeArgument<tbl_session::user_id>>;
+    EXPECT_STREQ(typeid(std::string).name(),
+                 typeid(u4).name()) << value::debug::demangle(typeid(u4));
     
 }

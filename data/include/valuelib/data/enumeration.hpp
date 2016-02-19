@@ -5,6 +5,7 @@
 #include <boost/preprocessor.hpp>
 #include <stdexcept>
 #include <exception>
+#include <valuelib/data/type_traits.hpp>
 
 namespace value { namespace data {
     
@@ -116,6 +117,19 @@ namespace value { namespace data {
     {
         return os << to_string(e);
     }
+    
+    template<class T>
+    static constexpr auto IsEnumeration = is_derived_from_template_v<T, enumeration>;
+    
+    namespace impl {
+        template<class Type>
+        struct underlying_type<Type, std::enable_if_t<IsEnumeration<Type> > >
+        {
+            using result = UnderlyingType<typename Type::value_type>;
+        };
+    }
+
+
 }}
     //
     // generated code

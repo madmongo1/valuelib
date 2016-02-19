@@ -4,6 +4,7 @@
 #include <string>
 #include <boost/operators.hpp>
 #include <valuelib/immutable/string.hpp>
+#include <valuelib/data/type_traits.hpp>
 
 namespace value { namespace data {
 
@@ -60,6 +61,22 @@ template<class L, class R, typename = decltype(std::declval<L>() Symbol std::dec
     private:
         value_type _value;
     };
+    
+    // traits type to determine if a type is field_type
+    
+    template<class T>
+    static constexpr auto IsFieldType = is_derived_from_template_v<T, field_type>;
+    
+    namespace impl {
+        template<class Type>
+        struct underlying_type<Type, std::enable_if_t<value::data::IsFieldType<Type> > >
+        {
+            using result = UnderlyingType<typename Type::value_type>;
+        };
+    }
+    
+
+    
     
 #define VALUE_DATA_IMPLEMENT_FIELD_OPERATOR(Name, Symbol) \
 template<class Tag, class Type, class Right, std::enable_if_t<op_check::Name<Type, Right>()>* = nullptr> \
