@@ -41,6 +41,12 @@ namespace value { namespace debug {
         return demangle(typeid(T));
     }
     
+    template<class T>
+    demangled_string demangle()
+    {
+        return demangle(typeid(T));
+    }
+    
     std::string strip_nested(const char* demangled_name);
     std::string strip_nested(demangled_string demangled_name);
     std::string strip_nested(std::string demangled_name);

@@ -5,6 +5,11 @@ namespace value { namespace debug {
     const char* nonstandard_exception::what() const noexcept {
         return "no message";
     }
+    
+    const char* no_exception::what() const noexcept {
+        return "no exception to unwrap";
+    }
+
 
 
     std::string tidy_exception_name(const std::exception& e)
