@@ -2,6 +2,7 @@
 #include <valuelib/data/sql/dialect.hpp>
 #include <valuelib/data/entity.hpp>
 #include <valuelib/data/database_engine.hpp>
+#include <valuelib/data/database/entity.hpp>
 
 namespace value { namespace data { namespace sql {
    
