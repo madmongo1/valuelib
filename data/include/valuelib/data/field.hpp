@@ -139,6 +139,7 @@ template<class Tag, class Type, class Right, std::enable_if_t<op_check::Name<Typ
         return r.value();
     }
     
+    
 }}
 namespace std {
 

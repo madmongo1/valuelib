@@ -62,6 +62,12 @@ namespace value { namespace data {
         static constexpr bool is_limited = false;
     };
     
+    template<std::size_t Limit>
+    struct fixed_length
+    {
+        static constexpr std::size_t limit = Limit;
+    };
+    
     ///
     /// @tparam NativeType is the type that the program will use to manipulate the data
     /// @tparam LengthLimit is the type that describes any length limit on this data
@@ -179,6 +185,18 @@ namespace value { namespace data {
         using result = boost::optional<NativeType>;
     };
     
+    //
+    // binary object storage
+    //
+    
+    template<class NativeType, class LengthLimit, class Nullable>
+    struct binary_storage
+    {
+        using length_limit_type = LengthLimit;
+        using nullable_type = Nullable;
+        using native_type = NativeType;
+    };
+    
     namespace detail
     {
         template<class Field> struct default_storage;
@@ -219,6 +237,17 @@ namespace value { namespace data {
             not_null
             >;
         };
+        
+        template<class Tag>
+        struct default_storage< field_type<Tag, std::vector<std::uint8_t>> >
+        {
+            using type = binary_storage<
+            field_type<Tag, std::vector<std::uint8_t>>,
+            unlimited_length,
+            not_null
+            >;
+        };
+
     }
     template<class Field> using default_storage = typename detail::default_storage<Field>::type;
     

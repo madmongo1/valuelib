@@ -108,6 +108,40 @@ namespace value { namespace data { namespace sql { namespace mysql {
         return to_sql_text_field_impl<LengthLimit>::apply() + to_sql(Nullable());
     }
     
+    
+    template<class LengthLimit>
+    struct to_sql_binary_field_impl;
+    
+    template<std::size_t Length>
+    struct to_sql_binary_field_impl<fixed_length<Length>>
+    {
+        static constexpr auto apply() {
+            return immutable::string(" BINARY(") + immutable::to_string<std::size_t, Length>() + ") ";
+        }
+    };
+    
+    template<std::size_t Length>
+    struct to_sql_binary_field_impl<limited_length<Length>>
+    {
+        static constexpr auto apply() {
+            return immutable::string(" VARBINARY(") + immutable::to_string<std::size_t, Length>() + ") ";
+        }
+    };
+    
+    template<>
+    struct to_sql_binary_field_impl<unlimited_length>
+    {
+        static constexpr auto apply() {
+            return immutable::string(" LONGBLOB ");
+        }
+    };
+    
+    template<class NativeType, class LengthLimit, class Nullable>
+    constexpr auto to_sql(value::data::binary_storage<NativeType, LengthLimit, Nullable> storage)
+    {
+        return to_sql_binary_field_impl<LengthLimit>::apply() + to_sql(Nullable());
+    }
+    
     template<class Column, std::enable_if_t<is_column_v<Column>>* = nullptr>
     constexpr auto to_sql(Column column)
     {
