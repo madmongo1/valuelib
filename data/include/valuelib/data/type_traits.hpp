@@ -1,5 +1,6 @@
 #pragma once
 #include <boost/optional/optional_fwd.hpp>
+#include <utility>
 
 namespace value { namespace data {
     
