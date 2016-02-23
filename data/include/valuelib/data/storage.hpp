@@ -190,12 +190,24 @@ namespace value { namespace data {
     //
     
     template<class NativeType, class LengthLimit, class Nullable>
-    struct binary_storage
+    struct binary_storage : implement_nullable<Nullable>
     {
         using length_limit_type = LengthLimit;
-        using nullable_type = Nullable;
         using native_type = NativeType;
     };
+    
+    template<class NativeType, class LengthLimit>
+    struct deduce_native_argument<binary_storage<NativeType, LengthLimit, not_null>>
+    {
+        using result = NativeType;
+    };
+    
+    template<class NativeType, class LengthLimit>
+    struct deduce_native_argument<binary_storage<NativeType, LengthLimit, nullable>>
+    {
+        using result = boost::optional<NativeType>;
+    };
+
     
     namespace detail
     {
@@ -247,6 +259,8 @@ namespace value { namespace data {
             not_null
             >;
         };
+        
+
 
     }
     template<class Field> using default_storage = typename detail::default_storage<Field>::type;
