@@ -40,6 +40,12 @@ namespace value { namespace debug {
             return add_printer_impl(typeid(T), std::make_unique<model<T>>(std::move(func)));
         }
         
+        template<class T, class Function>
+        static bool add_printer(Function&& f)
+        {
+            return add_printer<T>(print_function<T>(std::forward<Function>(f)));
+        }
+        
     };
 
 }}

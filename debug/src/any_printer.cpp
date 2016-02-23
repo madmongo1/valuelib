@@ -3,7 +3,7 @@
 #include <valuelib/debug/demangle.hpp>
 
 namespace value { namespace debug {
-  
+    
     struct any_printer::impl {
         using map_type = std::unordered_map<std::type_index, std::unique_ptr<concept>>;
         mutable std::mutex _mutex;
@@ -18,10 +18,10 @@ namespace value { namespace debug {
         void print(std::ostream& os, std::type_index ti, const boost::any& a) const
         {
             try {
-            auto lock = std::unique_lock<std::mutex>(_mutex);
-            const auto& printer = _map.at(ti);
-            lock.unlock();
-            printer->print(os, a);
+                auto lock = std::unique_lock<std::mutex>(_mutex);
+                const auto& printer = _map.at(ti);
+                lock.unlock();
+                printer->print(os, a);
             }
             catch(const std::out_of_range&)
             {
@@ -35,18 +35,22 @@ namespace value { namespace debug {
         static impl _{};
         return _;
     }
-
+    
     bool any_printer::add_printer_impl(std::type_index ti, std::unique_ptr<concept>&& pc)
     {
         return get_impl().add_printer(ti, std::move(pc));
     }
-
+    
     std::ostream& any_printer::print(std::ostream& os, const boost::any& a)
     {
-        auto& impl = get_impl();
-        impl.print(os, a.type(), a);
-        return os;
+        if (a.empty())
+            return os << "null";
+        else {
+            auto& impl = get_impl();
+            impl.print(os, a.type(), a);
+            return os;
+        }
     }
-
-
+    
+    
 }}
