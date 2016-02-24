@@ -37,6 +37,12 @@ template<class L, class R, typename = decltype(std::declval<L>() Symbol std::dec
         
     };
     
+    template<class Type, std::enable_if_t<std::is_default_constructible<Type>::value>* = nullptr >
+    auto default_construct()
+    {
+        return Type();
+    }
+    
     template<class Tag, class Type>
     struct field_type
     : boost::equality_comparable<field_type<Tag, Type>>
@@ -46,7 +52,7 @@ template<class L, class R, typename = decltype(std::declval<L>() Symbol std::dec
         using value_type = Type;
         using implementation_type = field_type;
         
-        field_type() : _value() {};
+        field_type() : _value(default_construct<value_type>()) {};
         
         template<
         class...Args,
