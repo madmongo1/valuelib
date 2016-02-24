@@ -15,3 +15,5 @@ namespace value { namespace data { namespace sql { namespace mysql {
 
 #include "create.hpp"
 #include "drop.hpp"
+#include "insert.hpp"
+
