@@ -2,6 +2,7 @@
 #include <tuple>
 #include <utility>
 #include <string>
+#include <vector>
 #include <boost/operators.hpp>
 #include <valuelib/immutable/string.hpp>
 #include <valuelib/data/type_traits.hpp>
@@ -90,8 +91,26 @@ template<class Tag, class Type, class Right, std::enable_if_t<op_check::Name<Typ
     VALUE_DATA_IMPLEMENT_FIELD_OPERATOR(gt, >)
     VALUE_DATA_IMPLEMENT_FIELD_OPERATOR(ge, >=)
     VALUE_DATA_IMPLEMENT_FIELD_OPERATOR(ne, !=)
+    
+    
+    template<class Tag, class Type, typename std::enable_if_t<
+    is_derived_from_template_v<Type, std::vector>
+    >* = nullptr>
+    std::ostream& operator<<(std::ostream& os, const field_type<Tag, Type>& f)
+    {
+        os << "[ ";
+        auto sep = "";
+        for (const auto& e : f.value())
+        {
+            os << sep << e;
+            sep = ", ";
+        }
+        return os << " ]";
+    }
 
-    template<class Tag, class Type>
+    template<class Tag, class Type, typename std::enable_if_t<
+    not is_derived_from_template_v<Type, std::vector>
+    >* = nullptr>
     std::ostream& operator<<(std::ostream& os, const field_type<Tag, Type>& f)
     {
         return os << f.value();
