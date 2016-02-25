@@ -171,6 +171,7 @@ namespace value { namespace data {
                 return arg.value();
             }
         };
+        
     }
     
     template<class Identifier, class Type>
@@ -310,21 +311,6 @@ namespace value { namespace data {
         static constexpr auto default_limits() { return no_size_limits(); }
     };
     
-    template<>
-    struct storage_traits<boost::uuids::uuid>
-    {
-        using connector_write_interface = std::tuple<std::string>;
-        using connector_read_interface = std::tuple<std::string>;
-        static constexpr auto default_limits() { return no_size_limits(); }
-    };
-    
-    template<>
-    struct storage_traits<boost::posix_time::ptime>
-    {
-        using connector_write_interface = std::tuple<std::string>;
-        using connector_read_interface = std::tuple<std::string>;
-        static constexpr auto default_limits() { return no_size_limits(); }
-    };
     
     namespace impl {
         

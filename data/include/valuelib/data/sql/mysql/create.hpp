@@ -84,6 +84,17 @@ namespace value { namespace data { namespace sql { namespace mysql {
         }
     };
     
+    template<std::size_t Length>
+    struct to_sql_text_field_impl<value::data::fixed_length<Length>>
+    {
+        static constexpr auto apply()
+        {
+            return immutable::string(" CHAR(") +
+            immutable::to_string<std::size_t, Length>() +
+            immutable::string(") ");
+        }
+    };
+    
     template<>
     struct to_sql_text_field_impl<value::data::unlimited_length>
     {

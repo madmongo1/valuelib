@@ -15,4 +15,5 @@ column.hpp
 database_engine.hpp
 deduce_native.hpp
 storable_data.hpp
+uuid.hpp
 )

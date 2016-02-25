@@ -3,6 +3,7 @@
 #include <utility>
 #include <valuelib/debug/demangle.hpp>
 #include <iterator>
+#include <iomanip>
 
 namespace value { namespace tuple {
 

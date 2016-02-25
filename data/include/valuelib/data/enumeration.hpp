@@ -80,7 +80,7 @@ namespace value { namespace data {
         }
         return detail::string_of<0, sizeof...(Values)>::apply(t, i);
     }
-
+    
 
     template<class Tag>
     struct enumeration

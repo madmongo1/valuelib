@@ -334,3 +334,4 @@ TEST(test_io, string_types)
     ASSERT_GE(v, v2);
     ASSERT_NE(v, v2);
 }
+

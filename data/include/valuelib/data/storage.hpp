@@ -275,6 +275,16 @@ namespace value { namespace data {
         };
         
         template<class Identifier>
+        struct deduce_storable_data_storage< storable_data<Identifier, boost::uuids::uuid> >
+        {
+            using type = string_storage<
+            Identifier,
+            fixed_length<36>,
+            not_null
+            >;
+        };
+        
+        template<class Identifier>
         struct default_storage<
         Identifier,
         std::enable_if_t< is_derived_from_template_v<Identifier, storable_data> >
