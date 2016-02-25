@@ -17,6 +17,8 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+#include <valuelib/tuple/print.hpp>
+
 VALUE_DATA_DEFINE_FIELD(foo, std::string);
 VALUE_DATA_DEFINE_FIELD(bar, std::string);
 
@@ -205,5 +207,61 @@ TEST(testStorage, testUnderlyingType)
     using u4 = value::data::UnderlyingType<value::data::DeduceNativeArgument<tbl_session::user_id>>;
     EXPECT_STREQ(typeid(std::string).name(),
                  typeid(u4).name()) << value::debug::demangle(typeid(u4));
+    
+}
+
+TEST(test_io, streaming_binary)
+{
+    using namespace std;
+    using vector_type = std::vector<std::uint8_t>;
+    auto v = vector_type(256);
+    std::generate_n(std::begin(v), 256, [val = uint8_t(0)]() mutable { return val++; });
+    
+    std::ostringstream oss;
+    oss.write(reinterpret_cast<const char*>(v.data()), v.size());
+    
+    auto written = oss.str();
+    auto write_check = vector_type(begin(written), end(written));
+    
+    ASSERT_EQ(v, write_check);
+    
+    std::istringstream iss(written);
+    auto v2 = vector_type();
+    iss >> noskipws;
+    copy(istream_iterator<uint8_t>(iss), istream_iterator<uint8_t>(), back_inserter(v2));
+    
+    ASSERT_EQ(v, v2);
+}
+
+#include <valuelib/data/string_data.hpp>
+
+TEST(test_io, native_binary_type)
+{
+    struct type1 : value::data::storable_data<type1, std::vector<std::uint8_t>> {
+        using storable_data_type::storable_data_type;
+        static constexpr auto identifier() { return value::immutable::string("type1"); }
+    };
+    
+    struct type2 : value::data::storable_data<type2, std::vector<std::uint8_t>> {
+        using storable_data_type::storable_data_type;
+        static constexpr auto identifier() { return value::immutable::string("type2"); }
+    };
+    
+    ASSERT_TRUE(value::data::IsStorableData<type1>);
+    
+    ASSERT_FALSE(( std::is_constructible<type1, type2>::value ));
+    ASSERT_TRUE(( std::is_copy_constructible<type1>::value ));
+    ASSERT_TRUE(( std::is_copy_assignable<type1>::value ));
+    
+    auto v = type1(256);
+    std::generate_n(std::begin(v), 256, [val = uint8_t(0)]() mutable { return val++; });
+    
+    std::ostringstream ss;
+    ss << value::tuple::print_tuple(v);
+    ASSERT_EQ("", ss.str());
+    
+    
+    
+
     
 }

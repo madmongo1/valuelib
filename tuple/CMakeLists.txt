@@ -1,5 +1,5 @@
 
-project(ValueLib_data)
+project(ValueLib_tuple)
 
 find_package(Threads)
 
@@ -27,10 +27,10 @@ list(APPEND ALL_BINARIES ${BINARY_SRCS})
 SOURCE_GROUP_BY_FOLDER(${ALL_SRCS})
 BINARY_GROUP_BY_FOLDER(${ALL_BINARIES})
 
-add_library(ValueLib_data ${INTERFACE_FILES} ${SOURCE_FILES})
-target_link_libraries(ValueLib_data ValueLib_tuple ValueLib_immutable)
+add_library(ValueLib_tuple ${INTERFACE_FILES} ${SOURCE_FILES})
+target_link_libraries(ValueLib_tuple ValueLib_immutable ValueLib_debug)
 
-target_include_directories(ValueLib_data
+target_include_directories(ValueLib_tuple
 SYSTEM PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -42,13 +42,13 @@ PRIVATE
 )
 
 install(
-    EXPORT "ValueLib_data"
+    EXPORT "ValueLib_tuple"
     DESTINATION "lib"
 )
 
 install(
-    TARGETS ValueLib_data
-    EXPORT "ValueLib_data"
+    TARGETS ValueLib_tuple
+    EXPORT "ValueLib_tuple"
     LIBRARY DESTINATION "lib"
     ARCHIVE DESTINATION "lib"
     RUNTIME DESTINATION "bin"
@@ -58,9 +58,9 @@ find_package(GTest)
 
 if(GTEST_FOUND)
     include_directories(BEFORE SYSTEM ${GTEST_INCLUDE_DIRS})
-	add_executable(ValueLib_data_test ${TEST_FILES})
-	target_link_libraries(ValueLib_data_test ${CMAKE_THREAD_LIBS_INIT} ValueLib_data ${GTEST_BOTH_LIBRARIES})
-    add_test(NAME test_all_data COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ValueLib_data_test)
+	add_executable(ValueLib_tuple_test ${TEST_FILES})
+	target_link_libraries(ValueLib_tuple_test ${CMAKE_THREAD_LIBS_INIT} ValueLib_tuple ${GTEST_BOTH_LIBRARIES})
+    add_test(NAME test_all_tuple COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ValueLib_tuple_test)
 endif()
 
 
