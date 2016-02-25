@@ -1,6 +1,7 @@
 #pragma once
 #include <boost/optional/optional_fwd.hpp>
 #include <utility>
+#include <functional>
 
 namespace value { namespace data {
     
@@ -32,7 +33,7 @@ static constexpr auto Name() { return false; }
         static auto test(int) -> decltype((std::declval<X>() OPERATOR std::declval<Y>()), void(), std::true_type()); \
 \
         template<typename, typename> \
-        static auto test() -> std::false_type; \
+        static auto test(...) -> std::false_type; \
 \
         static constexpr bool value = decltype(test<T, U>(0))::value; \
     }; \
@@ -44,6 +45,21 @@ static constexpr auto Name() { return false; }
     VALUE_DATA_SUPPORTS_EQ_TEST(Le, <=);
     VALUE_DATA_SUPPORTS_EQ_TEST(Gt, >);
     VALUE_DATA_SUPPORTS_EQ_TEST(Ge, >=);
+
+    template<class T>
+    struct supports_size
+    {
+        template<class X>
+        static auto test(int) -> decltype((std::declval<X>().size()), void(), std::true_type());
+        
+        template<typename>
+        static auto test(...) -> std::false_type;
+        
+        static constexpr bool value = decltype(test<T>(0))::value;
+    };
+    template<class X> static constexpr auto SupportsSize = supports_size<X>::value;
+
+    
     
     struct op_check {
         

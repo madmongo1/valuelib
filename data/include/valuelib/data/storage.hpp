@@ -7,6 +7,7 @@
 #include "metafunctions.hpp"
 #include <type_traits>
 #include "deduce_native.hpp"
+#include <valuelib/data/storable_data.hpp>
 
 namespace value { namespace data {
     
@@ -211,7 +212,7 @@ namespace value { namespace data {
     
     namespace detail
     {
-        template<class Field> struct default_storage;
+        template<class Field, typename Enable = void> struct default_storage;
         
         template<class Tag>
         struct default_storage< field_type<Tag, std::string> >
@@ -258,6 +259,29 @@ namespace value { namespace data {
             unlimited_length,
             not_null
             >;
+        };
+        
+        template<class Identifier>
+        struct deduce_storable_data_storage;
+        
+        template<class Identifier>
+        struct deduce_storable_data_storage< storable_data<Identifier, std::string> >
+        {
+            using type = string_storage<
+            Identifier,
+            limited_length<64>,
+            not_null
+            >;
+        };
+        
+        template<class Identifier>
+        struct default_storage<
+        Identifier,
+        std::enable_if_t< is_derived_from_template_v<Identifier, storable_data> >
+        >
+        {
+            using storable_data_type = typename Identifier::storable_data_type;
+            using type = typename deduce_storable_data_storage<storable_data_type>::type;
         };
         
 

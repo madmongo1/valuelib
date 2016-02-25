@@ -10,12 +10,56 @@
 #include <valuelib/tuple/metafunction.hpp>
 
 namespace value { namespace data {
-    // introduce storage idea
+    
+    //
+    // storable_data that is not intrinsically fixed length shall have size_limits defined.
+    // numeric data and fixed length types such as uuids and timestamps do not need size_limits
+    // and a connector shall ignore them
+    //
+    // The upper bound of the size_limit is a request. The connector may choose to reduce it.
+    // The storable data object is responsible to rejecting assignments that break limits.
+    // the connector is responsible for rejecting writes that break size limits
+    //
+    struct no_size_limits
+    {
+    };
+    
+    struct limit_to_range
+    {
+        constexpr limit_to_range(std::size_t Min, std::size_t Max) noexcept
+        : _min(Min), _max(Max) {}
+        
+        constexpr auto min() const noexcept { return _min; }
+        constexpr auto max() const noexcept { return _max; }
+    private:
+        const std::size_t _min, _max;
+    };
+    
+    constexpr auto fixed_size(std::size_t len) { return limit_to_range(len, len); }
+    constexpr auto maximim_size(std::size_t Max) { return limit_to_range(0, Max); }
+    
+    constexpr void check_length(no_size_limits, std::size_t len)
+    {
+        
+    }
+
+    constexpr void check_length(limit_to_range rng, std::size_t len)
+    {
+        if (len < rng.min()) {
+            throw std::invalid_argument("insufficient data");
+        }
+        if (len > rng.min()) {
+            throw std::invalid_argument("data too long");
+        }
+    }
+    
+    
     template<class T>
     struct storage_traits
     {
         using connector_write_interface = std::tuple<>;
         using connector_read_interface = std::tuple<>;
+        static constexpr auto default_limits() { return no_size_limits(); }
     };
     
     template<class Type>
@@ -37,6 +81,22 @@ namespace value { namespace data {
     Interface
     >;
     
+    
+    template<class Type, class Limits, std::enable_if_t< SupportsSize<Type> >* = nullptr>
+    void check_limits(const Type& t, Limits limits)
+    {
+        check_length(t.size(), limits);
+    }
+    
+    template<class Type, class Limits, std::enable_if_t< not SupportsSize<Type> >* = nullptr>
+    void check_limits(const Type& t, Limits limits)
+    {
+    }
+    
+    /// a flag object to encourage storable_data to skip length checks (if needed)
+    namespace detail { struct skip_limit_check{}; }
+    static constexpr auto skip_limit_check = detail::skip_limit_check {};
+    
     template<class Identifier, class Type, typename Enable = void>
     struct storable_data
     {
@@ -47,13 +107,31 @@ namespace value { namespace data {
         static constexpr auto identifier() { return Identifier::identifier(); }
         
         // constructors
+        
         template<
         class...Args,
         typename std::enable_if_t<std::is_constructible<underlying_type, Args...>::value>* = nullptr
         >
         explicit storable_data(Args&&... args)
         : _value(std::forward<Args>(args)...)
-        {}
+        {
+            // all constructors shall ensure limits are not broken
+            check_limits(*this, Identifier::size_limits());
+        }
+        
+        template<
+        class...Args,
+        typename std::enable_if_t<std::is_constructible<underlying_type, Args...>::value>* = nullptr
+        >
+        explicit storable_data(detail::skip_limit_check, Args&&... args)
+        : _value(std::forward<Args>(args)...)
+        {
+            // note: limit check not performed
+        }
+        
+        static constexpr auto size_limits() {
+            return StorageTraits<Type>::default_limits();
+        }
         
         // convert to underlying type
         const underlying_type& value() const { return _value; }
@@ -73,6 +151,33 @@ namespace value { namespace data {
         os << " : ";
         os << value::tuple::print_tuple(sd.value());
         return os;
+    }
+    
+    
+    // convert to string
+    namespace impl {
+        template<class StorableData>
+        struct to_string;
+        
+        template<class Identifier, class Char, class Traits, class Alloc>
+        struct to_string<storable_data<Identifier, std::basic_string<Char, Traits, Alloc> > >
+        {
+            using storable_type = storable_data<Identifier, std::basic_string<Char, Traits, Alloc>>;
+            using arg_type = storable_type const&;
+            using result_type = typename storable_type::underlying_type const&;
+            
+            constexpr to_string() {};
+            constexpr result_type operator()(arg_type arg) const {
+                return arg.value();
+            }
+        };
+    }
+    
+    template<class Identifier, class Type>
+    decltype(auto) to_string(const storable_data<Identifier, Type>& sd)
+    {
+        constexpr impl::to_string<storable_data<Identifier, Type>> op;
+        return op(sd);
     }
 #define VALUE_DATA_STORABLE_DATA_OPERATOR(NAME, SYMBOL) \
 \
@@ -194,6 +299,7 @@ namespace value { namespace data {
     {
         using connector_write_interface = std::tuple<std::ostream>;
         using connector_read_interface = std::tuple<std::istream>;
+        static constexpr auto default_limits() { return no_size_limits(); }
     };
     
     template<class Traits, class Allocator>
@@ -201,6 +307,7 @@ namespace value { namespace data {
     {
         using connector_write_interface = std::tuple<std::ostream, std::string>;
         using connector_read_interface = std::tuple<std::istream, std::string>;
+        static constexpr auto default_limits() { return no_size_limits(); }
     };
     
     template<>
@@ -208,6 +315,7 @@ namespace value { namespace data {
     {
         using connector_write_interface = std::tuple<std::string>;
         using connector_read_interface = std::tuple<std::string>;
+        static constexpr auto default_limits() { return no_size_limits(); }
     };
     
     template<>
@@ -215,6 +323,7 @@ namespace value { namespace data {
     {
         using connector_write_interface = std::tuple<std::string>;
         using connector_read_interface = std::tuple<std::string>;
+        static constexpr auto default_limits() { return no_size_limits(); }
     };
     
     namespace impl {
