@@ -285,6 +285,15 @@ namespace value { namespace data {
         };
         
         template<class Identifier>
+        struct deduce_storable_data_storage< storable_data<Identifier, boost::posix_time::ptime> >
+        {
+            using type = timestamp_storage<
+            Identifier,
+            not_null
+            >;
+        };
+        
+        template<class Identifier>
         struct default_storage<
         Identifier,
         std::enable_if_t< is_derived_from_template_v<Identifier, storable_data> >
