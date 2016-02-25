@@ -233,7 +233,7 @@ TEST(test_io, streaming_binary)
     ASSERT_EQ(v, v2);
 }
 
-#include <valuelib/data/string_data.hpp>
+#include <valuelib/data/storable_data.hpp>
 
 TEST(test_io, native_binary_type)
 {
@@ -250,18 +250,87 @@ TEST(test_io, native_binary_type)
     ASSERT_TRUE(value::data::IsStorableData<type1>);
     
     ASSERT_FALSE(( std::is_constructible<type1, type2>::value ));
+    ASSERT_TRUE(( std::is_constructible<type1, type1::underlying_type>::value ));
     ASSERT_TRUE(( std::is_copy_constructible<type1>::value ));
     ASSERT_TRUE(( std::is_copy_assignable<type1>::value ));
     
-    auto v = type1(256);
-    std::generate_n(std::begin(v), 256, [val = uint8_t(0)]() mutable { return val++; });
+    auto v = type1(type1::underlying_type(256));
+    std::generate_n(std::begin(v.value()), 256, [val = uint8_t(0)]() mutable { return val++; });
     
     std::ostringstream ss;
     ss << value::tuple::print_tuple(v);
-    ASSERT_EQ("", ss.str());
-    
-    
-    
+    ASSERT_EQ("type1 : [ 000102030405060708090a0b0c0d0e0f 101112131415161718191a1b1c1d1e1f 202122232425262728292a2b2c2d2e2f 303132333435363738393a3b3c3d3e3f\n  404142434445464748494a4b4c4d4e4f 505152535455565758595a5b5c5d5e5f 606162636465666768696a6b6c6d6e6f 707172737475767778797a7b7c7d7e7f\n  808182838485868788898a8b8c8d8e8f 909192939495969798999a9b9c9d9e9f a0a1a2a3a4a5a6a7a8a9aaabacadaeaf b0b1b2b3b4b5b6b7b8b9babbbcbdbebf\n  c0c1c2c3c4c5c6c7c8c9cacbcccdcecf d0d1d2d3d4d5d6d7d8d9dadbdcdddedf e0e1e2e3e4e5e6e7e8e9eaebecedeeef f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff ]", ss.str());
 
+    ASSERT_TRUE(( value::tuple::TupleHasType<std::tuple<std::ostream>, std::ostream>));
+    ASSERT_TRUE(( value::tuple::TupleHasType<value::data::StorageTraits<std::vector<std::uint8_t>>::connector_write_interface, std::ostream>));
     
+    EXPECT_TRUE(( value::tuple::TupleHasType<value::data::StorageTraits<std::vector<uint8_t>>::connector_write_interface, std::ostream> ));
+    ASSERT_TRUE(( value::data::is_derived_from_template_v<type1, value::data::storable_data> ));
+    using traits = value::data::StorageTraits<type1::underlying_type>::connector_write_interface;
+    std::cerr << value::debug::demangle(typeid(traits)) << std::endl;
+    
+    ASSERT_TRUE(( value::data::SupportsWrite<type1::underlying_type, std::ostream> ));
+
+    std::stringstream ss2;
+    value::data::write_to_connector(ss2, v);
+    
+    
+    auto v2 = value::data::read_from_connector<type1>(ss2);
+    ASSERT_EQ(v, v2);
+    ASSERT_EQ(v, v2.value());
+    ASSERT_LE(v, v2);
+    ASSERT_GE(v, v2);
+    
+    v2.value().at(255) = 0;
+    ASSERT_LE(v2, v);
+    ASSERT_LT(v2, v);
+    ASSERT_GT(v, v2);
+    ASSERT_GE(v, v2);
+    ASSERT_NE(v, v2);
+}
+
+TEST(test_io, string_types)
+{
+    struct type1 : value::data::storable_data<type1, std::string> {
+        using storable_data_type::storable_data_type;
+        static constexpr auto identifier() { return value::immutable::string("type1"); }
+    };
+    
+    struct type2 : value::data::storable_data<type2, std::string> {
+        using storable_data_type::storable_data_type;
+        static constexpr auto identifier() { return value::immutable::string("type2"); }
+    };
+    
+    ASSERT_TRUE(value::data::IsStorableData<type1>);
+    
+    ASSERT_FALSE(( std::is_constructible<type1, type2>::value ));
+    ASSERT_TRUE(( std::is_constructible<type1, type1::underlying_type>::value ));
+    ASSERT_TRUE(( std::is_copy_constructible<type1>::value ));
+    ASSERT_TRUE(( std::is_copy_assignable<type1>::value ));
+    
+    auto v = type1(std::string("hello"));
+    
+    std::ostringstream ss;
+    ss << value::tuple::print_tuple(v);
+    ASSERT_EQ("type1 : \"hello\"", ss.str());
+    
+    ASSERT_TRUE(( value::data::is_derived_from_template_v<type1, value::data::storable_data> ));
+    ASSERT_TRUE(( value::data::SupportsWrite<type1::underlying_type, std::ostream> ));
+    
+    std::stringstream ss2;
+    value::data::write_to_connector(ss2, v);
+    
+    
+    auto v2 = value::data::read_from_connector<type1>(ss2);
+    ASSERT_EQ(v, v2);
+    ASSERT_EQ(v, v2.value());
+    ASSERT_LE(v, v2);
+    ASSERT_GE(v, v2);
+    
+    v2.value().at(0) = 'a';
+    ASSERT_LE(v2, v);
+    ASSERT_LT(v2, v);
+    ASSERT_GT(v, v2);
+    ASSERT_GE(v, v2);
+    ASSERT_NE(v, v2);
 }
