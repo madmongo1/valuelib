@@ -4,6 +4,7 @@
 #include <tuple>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 #include <valuelib/tuple/print.hpp>
 

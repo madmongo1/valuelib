@@ -9,7 +9,7 @@ endif()
 enable_testing()
 
 if (NOT Boost_INCLUDE_DIR)
-	find_package(Boost VERSION 1.59)
+	find_package(Boost 1.59)
 endif()
 
 find_package(GTest)
