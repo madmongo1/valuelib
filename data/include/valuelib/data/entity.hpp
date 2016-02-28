@@ -16,6 +16,16 @@ namespace value { namespace data {
         static constexpr auto column() { return Column(); }
     };
     
+    template<class Table, class Column>
+    struct table_column_ref
+    {
+        using column_definition = Column;
+        using table_definition = Table;
+        using tag_type = index_component_tag;
+        static constexpr auto column() { return column_definition(); }
+        static constexpr auto table() { return table_definition(); }
+    };
+    
     template<class Expression>
     struct ascending : Expression
     {

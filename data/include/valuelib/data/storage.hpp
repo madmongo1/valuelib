@@ -208,6 +208,18 @@ namespace value { namespace data {
     {
         using result = boost::optional<NativeType>;
     };
+    
+    //
+    // unbound storage
+    //
+    
+    struct unbound_storage {};
+    template<>
+    struct deduce_native_argument<unbound_storage>
+    {
+        using result = void;
+    };
+    
 
     
     namespace detail

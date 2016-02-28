@@ -36,7 +36,7 @@ namespace value { namespace data {
     };
     
     constexpr auto fixed_size(std::size_t len) { return limit_to_range(len, len); }
-    constexpr auto maximim_size(std::size_t Max) { return limit_to_range(0, Max); }
+    constexpr auto maximum_size(std::size_t Max) { return limit_to_range(0, Max); }
     
     constexpr void check_length(no_size_limits, std::size_t len)
     {

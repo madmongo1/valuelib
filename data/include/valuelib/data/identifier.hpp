@@ -17,6 +17,6 @@ namespace value { namespace data {
 #define VALUE_DATA_IDENTIFIED_BY(name) \
 \
 static constexpr auto identifier() { \
-    return value::immutable::string(#name); \
+    return ::value::immutable::string(#name); \
 }
 
