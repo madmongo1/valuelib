@@ -97,17 +97,29 @@ namespace value { namespace data {
     namespace detail { struct skip_limit_check{}; }
     static constexpr auto skip_limit_check = detail::skip_limit_check {};
     
+    /// Base class of a unique type which can be stored in a database automatically.
+    /// @tparam Identifier is the derived class which shall define the constexpr static member identifier().
+    ///         This becomes the name of the unique_type
+    /// @tparam Type is the underlying data type, e.g. std::string
+    /// @tparam Enable is used to enable_if for specific specialisations
     template<class Identifier, class Type, typename Enable = void>
     struct storable_data
     {
+        /// Defines the type of data being represented by this wrapper
         using underlying_type = Type;
-        using storable_data_type = storable_data<Identifier, Type>;
-        using storage_traits = storage_traits<underlying_type>;
         
+        /// Defines this class specialisation. Used when specialising database access functions
+        using storable_data_type = storable_data<Identifier, Type>;
+        
+        /// Defines the traits of this class. Defaults to the traits of the underling type
+        using storage_traits = storage_traits<underlying_type>;
+
+        /// Returns the (constexpr) identifer of the outer type
         static constexpr auto identifier() { return Identifier::identifier(); }
         
         // constructors
         
+        /// Construct from anything that will legitimately construct the underlying type - and check limits
         template<
         class...Args,
         typename std::enable_if_t<std::is_constructible<underlying_type, Args...>::value>* = nullptr
@@ -119,6 +131,7 @@ namespace value { namespace data {
             check_limits(*this, Identifier::size_limits());
         }
         
+        /// Construct from anything that will legitimately construct the underlying type - skipping limit checks
         template<
         class...Args,
         typename std::enable_if_t<std::is_constructible<underlying_type, Args...>::value>* = nullptr
@@ -129,6 +142,7 @@ namespace value { namespace data {
             // note: limit check not performed
         }
         
+        /// Return the size limits that are checked against during construction
         static constexpr auto size_limits() {
             return StorageTraits<Type>::default_limits();
         }

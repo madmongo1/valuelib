@@ -1,28 +1,19 @@
 project(ValueLib_pointers)
 
-MACRO(SOURCE_GROUP_BY_FOLDER)
-    FOREACH(file ${ARGN})
-        file(RELATIVE_PATH relative_file "${CMAKE_CURRENT_SOURCE_DIR}" ${file})
-        GET_FILENAME_COMPONENT(dir "${relative_file}" PATH)
-        SOURCE_GROUP(${dir} FILES ${file})
-    ENDFOREACH(file)
-ENDMACRO(SOURCE_GROUP_BY_FOLDER)
+interface_tree(include)
+source_tree(src)
+test_tree(test)
 
-
-
-add_subdirectory(pointers)
-add_subdirectory(src)
-add_subdirectory(test)
-
-source_group_by_folder(${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${PRIVATE_SOURCE} ${TEST_SOURCE} ${TEST_HEADERS})
-
-
-add_library(ValueLib_pointers ${PUBLIC_HEADERS} ${PRIVATE_HEADERS} ${PRIVATE_SOURCE})
+add_library(ValueLib_pointers ${INTERFACE_FILES} ${SOURCE_FILES})
 target_include_directories(ValueLib_pointers PUBLIC
-$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-$<INSTALL_INTERFACE:include/valuelib/pointers>
+SYSTEM PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+	$<INSTALL_INTERFACE:include>
 PRIVATE
-${CMAKE_CURRENT_SOURCE_DIR}/pointers
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+	${CMAKE_CURRENT_BINARY_DIR}/include
+	${CMAKE_CURRENT_BINARY_DIR}/src
 )
 
 find_package(GTest)

@@ -1,2 +1,3 @@
 add_sources(CMakeLists.txt
-pointer_traits.cpp)
+pointer_traits.hpp)
+

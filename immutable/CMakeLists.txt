@@ -3,29 +3,9 @@ project(ValueLib_immutable)
 
 find_package(Threads)
 
-set(SRCS)
-set(BINARY_SRCS)
-add_subdirectory(include)
-set(INTERFACE_FILES ${SRCS} ${BINARY_SRCS})
-list(APPEND ALL_SRCS ${SRCS})
-list(APPEND ALL_BINARIES ${BINARY_SRCS})
-
-set(SRCS)
-set(BINARY_SRCS)
-add_subdirectory(src)
-set(SOURCE_FILES ${SRCS} ${BINARY_SRCS})
-list(APPEND ALL_SRCS ${SRCS})
-list(APPEND ALL_BINARIES ${BINARY_SRCS})
-
-set(SRCS)
-set(BINARY_SRCS)
-add_subdirectory(test)
-set(TEST_FILES ${SRCS} ${BINARY_SRCS})
-list(APPEND ALL_SRCS ${SRCS})
-list(APPEND ALL_BINARIES ${BINARY_SRCS})
-
-SOURCE_GROUP_BY_FOLDER(${ALL_SRCS})
-BINARY_GROUP_BY_FOLDER(${ALL_BINARIES})
+interface_tree(include)
+source_tree(src)
+test_tree(test)
 
 add_library(ValueLib_immutable ${INTERFACE_FILES} ${SOURCE_FILES})
 target_link_libraries(ValueLib_immutable ValueLib_debug)
