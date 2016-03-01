@@ -6,7 +6,7 @@
 //
 //
 #pragma once
-#include <valuelib/data/deduce_nartive.hpp>
+#include <valuelib/data/deduce_native.hpp>
 
 namespace value { namespace data { namespace database {
     
@@ -17,7 +17,7 @@ namespace value { namespace data { namespace database {
     struct match_element<Seek, Seek> : std::true_type {};
     
     template<class Seek>
-    struct match_element<boost::optonal<Seek>, Seek> : std::true_type {};
+    struct match_element<boost::optional<Seek>, Seek> : std::true_type {};
     
     namespace impl {
         template<class Tuple> struct tuple_begin;
