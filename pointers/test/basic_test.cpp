@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <pointers/pointer_traits.hpp>
+#include <valuelib/pointers/pointer_traits.hpp>
 #include <memory>
 
 TEST(pointerTraitsTest, basics)
