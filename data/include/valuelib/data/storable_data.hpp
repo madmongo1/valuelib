@@ -216,6 +216,23 @@ namespace value { namespace data {
             }
         };
         
+        template<class Tr, class A>
+        struct from_string_impl<std::basic_string<char, Tr, A>>
+        {
+            using my_string_type = std::basic_string<char, Tr, A>;
+            
+            template<class Tr2, class A2>
+            my_string_type operator()(const std::basic_string<char, Tr2, A2>& r) const
+            {
+                return { r.begin(), r.end() };
+            }
+            
+            const my_string_type& operator()(const my_string_type& r) const {
+                return r;
+            }
+            
+        };
+        
     }
     
     template<class Storable>
