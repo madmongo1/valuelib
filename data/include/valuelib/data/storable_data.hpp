@@ -8,6 +8,7 @@
 #pragma once
 #include <valuelib/tuple/print.hpp>
 #include <valuelib/tuple/metafunction.hpp>
+#include <valuelib/data/type_traits.hpp>
 
 namespace value { namespace data {
     
@@ -169,31 +170,68 @@ namespace value { namespace data {
     
     
     // convert to string
+    template<class StorableData>
+    auto from_string(const std::string& s);
+    
+    template<class StorableData>
+    decltype(auto) to_string(const StorableData& s);
+    
     namespace impl {
-        template<class StorableData>
-        struct to_string;
+        template<class StorableData, typename Enable = void>
+        struct to_string_impl;
         
-        template<class Identifier, class Char, class Traits, class Alloc>
-        struct to_string<storable_data<Identifier, std::basic_string<Char, Traits, Alloc> > >
+        template<class C, class Tr, class A>
+        struct to_string_impl<std::basic_string<C, Tr, A>>
         {
-            using storable_type = storable_data<Identifier, std::basic_string<Char, Traits, Alloc>>;
-            using arg_type = storable_type const&;
-            using result_type = typename storable_type::underlying_type const&;
+            decltype(auto) operator()(const std::basic_string<C, Tr, A>& ref) const {
+                return ref;
+            }
+        };
+        
+        template <class Storable>
+        struct to_string_impl<Storable, std::enable_if_t<is_derived_from_template_v<Storable, storable_data> > >
+        {
+             std::string operator()(const Storable& arg) const {
+                 using value::data::to_string;
+                 using op_type = to_string_impl<typename Storable::underlying_type>;
+                 constexpr auto op = op_type();
+                 return op(arg.value());
+            }
+        };
+        
+        template<class Storable, typename Enable = void>
+        struct from_string_impl;
+        
+        template<class Storable>
+        struct from_string_impl<
+        Storable,
+        std::enable_if_t<is_derived_from_template_v<Storable, storable_data> >
+        >
+        {
+            using storable_type = Storable;
+            using underlying_type = typename storable_type::underlying_type;
             
-            constexpr to_string() {};
-            constexpr result_type operator()(arg_type arg) const {
-                return arg.value();
+            storable_type operator()(const std::string& s) const {
+                return storable_type(::value::data::from_string<underlying_type>(s));
             }
         };
         
     }
     
-    template<class Identifier, class Type>
-    decltype(auto) to_string(const storable_data<Identifier, Type>& sd)
+    template<class Storable>
+    decltype(auto) to_string(const Storable& sd)
     {
-        constexpr impl::to_string<storable_data<Identifier, Type>> op;
+        constexpr impl::to_string_impl<std::decay_t<Storable>> op{};
         return op(sd);
     }
+    
+    template<class StorableData>
+    auto from_string(const std::string& s)
+    {
+        constexpr auto op = impl::from_string_impl<StorableData>();
+        return op(s);
+    }
+    
 #define VALUE_DATA_STORABLE_DATA_OPERATOR(NAME, SYMBOL) \
 \
     template<class Identifier, class Type, std::enable_if_t<Supports##NAME<Type, Type>>* = nullptr> \
@@ -251,6 +289,7 @@ namespace value { namespace data {
             return v;
         }
     };
+    
 
     template<class Identifier,
     std::enable_if_t

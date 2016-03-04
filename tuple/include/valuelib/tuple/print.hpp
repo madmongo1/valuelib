@@ -4,6 +4,7 @@
 #include <valuelib/debug/demangle.hpp>
 #include <iterator>
 #include <iomanip>
+#include <vector>
 
 namespace value { namespace tuple {
 

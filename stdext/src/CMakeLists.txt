@@ -1,12 +1,4 @@
-
-set(PRIVATE_SOURCE
-   ${PRIVATE_SOURCE}
-   ${CMAKE_CURRENT_LIST_FILE}
-   ${CMAKE_CURRENT_SOURCE_DIR}/dummy.cpp
-   PARENT_SCOPE
-)
-set(PRIVATE_HEADERS
-   ${PRIVATE_HEADERS}
-   PARENT_SCOPE
+add_sources(CMakeLists.txt
+dummy.cpp
 )
 

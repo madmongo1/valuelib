@@ -1,0 +1,9 @@
+#pragma once
+
+namespace value { namespace stdext {
+
+	template<class T>
+	auto to_unique_ptr(T* p) {
+		return std::unique_ptr<T>(p);
+	}
+}}

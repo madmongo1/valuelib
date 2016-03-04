@@ -22,18 +22,23 @@ namespace value { namespace data {
 
     namespace impl {
         
-        template<class Identifier>
-        struct to_string<storable_data<Identifier, boost::uuids::uuid>>
+        template<>
+        struct to_string_impl<boost::uuids::uuid>
         {
-            using storable_type = storable_data<Identifier, boost::uuids::uuid>;
-            using arg_type = storable_type const&;
+            using arg_type = boost::uuids::uuid const&;
             using result_type = std::string;
             
-            constexpr to_string() {};
             result_type operator()(arg_type arg) const {
                 using boost::uuids::to_string;
-                return to_string(arg.value());
+                return to_string(arg);
             }
+        };
+        
+        template<>
+        struct from_string_impl<boost::uuids::uuid>
+        {
+            using result_type = boost::uuids::uuid;
+            result_type operator()(const std::string& s) const;
         };
         
     }

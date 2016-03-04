@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <stdext/bind_weak.hpp>
+#include <valuelib/stdext/bind_weak.hpp>
 #include <memory>
 
 TEST(bindWeakTest, testBasics)

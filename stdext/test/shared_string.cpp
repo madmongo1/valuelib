@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include <stdext/string_traits.hpp>
-#include <stdext/shared_string.hpp>
-#include <stdext/string_algorithm.hpp>
+#include <valuelib/stdext/string_traits.hpp>
+#include <valuelib/stdext/shared_string.hpp>
+#include <valuelib/stdext/string_algorithm.hpp>
 
 TEST(debugTest, testSharedString)
 {
