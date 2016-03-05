@@ -198,6 +198,9 @@ namespace value { namespace tuple {
         arg_type const& _arg;
     };
     
+    /// specialisation for a range (of iterators) - this must be copied as it may be transient
+    
+    
     template<>
     struct tuple_printer<const char*>
     {
@@ -241,7 +244,7 @@ namespace value { namespace tuple {
             }
             return os << " ]";
         }
-        const arg_type& _arg;
+        arg_type _arg;
     };
     
     template<class Iter>
