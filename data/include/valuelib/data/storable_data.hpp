@@ -9,6 +9,7 @@
 #include <valuelib/tuple/print.hpp>
 #include <valuelib/tuple/metafunction.hpp>
 #include <valuelib/data/type_traits.hpp>
+#include <valuelib/data/enumeration.hpp>
 
 namespace value { namespace data {
     
@@ -188,6 +189,15 @@ namespace value { namespace data {
             }
         };
         
+        template<class Enumeration>
+        struct to_string_impl<Enumeration, std::enable_if_t<IsEnumeration<Enumeration>>>
+        {
+            std::string operator()(const Enumeration& arg) const {
+                using value::data::to_string;
+                return to_string(arg);
+            }
+        };
+        
         template <class Storable>
         struct to_string_impl<Storable, std::enable_if_t<is_derived_from_template_v<Storable, storable_data> > >
         {
@@ -213,6 +223,19 @@ namespace value { namespace data {
             
             storable_type operator()(const std::string& s) const {
                 return storable_type(::value::data::from_string<underlying_type>(s));
+            }
+        };
+        
+        template<class Enumeration>
+        struct from_string_impl<
+        Enumeration,
+        std::enable_if_t<IsEnumeration<Enumeration> >
+        >
+        {
+            using storable_type = Enumeration;
+            
+            storable_type operator()(const std::string& s) const {
+                return storable_type::from_string(s);
             }
         };
         
