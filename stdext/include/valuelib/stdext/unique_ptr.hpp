@@ -12,4 +12,13 @@ namespace value { namespace stdext {
     {
         return std::unique_ptr<T, D>(p, std::forward<D>(deleter));
     }
+    
+    template<class T, class D, class Function>
+    decltype(auto) reset_if_null(std::unique_ptr<T, D>& ptr, Function func)
+    {
+        if (not ptr.get()) {
+            ptr.reset(func());
+        }
+        return ptr;
+    }
 }}
