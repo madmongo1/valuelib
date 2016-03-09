@@ -1,4 +1,5 @@
 add_sources(CMakeLists.txt
+    byte_buffer.hpp
     string_algorithm.hpp
     shared_string.hpp
     string_traits.hpp
