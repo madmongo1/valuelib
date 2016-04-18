@@ -1,4 +1,5 @@
 #include "valuelib/debug/unwrap.hpp"
+#include <iomanip>
 
 namespace value { namespace debug {
     
@@ -27,6 +28,11 @@ namespace value { namespace debug {
     void indenting_formatter::operator()(std::ostream& os, const std::exception& e, size_t depth) const {
         if (depth) os << std::endl;
         os << std::string(depth, ' ') << tidy_exception_name(e) << " : " << e.what();
+    }
+
+    void csv_formatter::operator()(std::ostream& os, const std::exception& e, size_t depth) const {
+        if (depth) os << ", ";
+        os << std::quoted(tidy_exception_name(e)) << " : " << std::quoted(e.what());
     }
 
 }}

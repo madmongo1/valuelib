@@ -66,6 +66,11 @@ namespace value { namespace debug {
         void operator()(std::ostream& os, const std::exception& e, size_t depth) const;
     };
     
+    struct csv_formatter
+    {
+        void operator()(std::ostream& os, const std::exception& e, size_t depth) const;
+    };
+    
     template<typename Formatter = indenting_formatter>
     auto unwrap(const std::exception& e,
                 Formatter&& formatter = indenting_formatter())
