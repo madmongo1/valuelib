@@ -2,6 +2,7 @@
 
 #include <valuelib/stdext/bind_weak.hpp>
 #include <memory>
+#include <valuelib/stdext/invoke.hpp>
 
 TEST(bindWeakTest, testBasics)
 {
@@ -98,5 +99,19 @@ TEST(bindWeakTest, unrelatedResourceTest)
     str = weak_something();
     EXPECT_FALSE(bool(str));
 
+    
+}
+
+TEST(invokeTest, invoke1)
+{
+    struct X {
+        int foo(int& x) const { return x++; };
+    };
+    X x;
+    
+    auto z = 7;
+    auto y = value::stdext::invoke(&X::foo, std::cref(x), z);
+    EXPECT_EQ(7, y);
+    EXPECT_EQ(8, z);
     
 }
