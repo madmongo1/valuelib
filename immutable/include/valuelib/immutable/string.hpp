@@ -14,12 +14,8 @@ namespace value { namespace immutable {
         struct string_type
         {
             constexpr string_type(const char(&buffer)[Length+1])
-            : _data {}
+            : string_type(buffer, std::make_index_sequence<Length+1>())
             {
-                for(std::size_t i = 0 ; i < Length ; ++i) {
-                    _data[i] = buffer[i];
-                }
-                _data[Length] = 0;
             }
 
             template<std::size_t RLength>
@@ -75,7 +71,13 @@ namespace value { namespace immutable {
             explicit operator std::string() const {
                 return std::string(begin(), end());
             }
-            
+        private:
+            template<std::size_t...Is>
+            constexpr string_type(const char(&buffer)[Length+1], std::index_sequence<Is...>)
+            : _data { buffer[Is]... }
+            {
+            }
+
         private:
             char _data[Length+1];
         };
