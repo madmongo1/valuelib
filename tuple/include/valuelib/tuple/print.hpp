@@ -147,12 +147,21 @@ namespace value { namespace tuple {
         template<class Stream, size_t...Is>
         void emit(Stream& os, std::index_sequence<Is...>) const
         {
+#if __cplusplus > 201402L
             (
              (
               comma(os, Is),
               (os << print_tuple(std::get<Is>(*_arg)))
               ),
              ...);
+#else
+            using expand = int[];
+            void(expand {0, (comma(os, Is),
+                             (os << print_tuple(std::get<Is>(*_arg))),
+                             0)
+                ...
+            });
+#endif
         }
         
         template<class Stream>
