@@ -29,7 +29,16 @@ namespace value { namespace tuple {
         template<class Func, class Tuple, std::size_t...Is>
         void for_each(Tuple&& tuple, Func&& func, std::index_sequence<Is...>)
         {
+#if __cplusplus > 201402L
             (std::forward<Func>(func)(std::get<Is>(std::forward<Tuple>(tuple))),...);
+#else
+            using expand = int[];
+            void(expand{0,
+                (std::forward<Func>(func)(std::get<Is>(std::forward<Tuple>(tuple))),
+                 0)...
+            });
+#endif
+
         }
     }
     
@@ -60,7 +69,15 @@ namespace value { namespace tuple {
         template<class Value, class Tuple, class Operation, std::size_t...Is>
         void accumulate(Tuple&& tuple, Value& acc, Operation op, std::index_sequence<Is...>)
         {
+#if __cplusplus > 201402L
             (apply_operation(op, acc, std::get<Is>(std::forward<Tuple>(tuple))),...);
+#else
+            using expand = int[];
+            void(expand{0, (
+                            apply_operation(op, acc, std::get<Is>(std::forward<Tuple>(tuple))),
+                            0)...});
+       
+#endif
         }
     }
     
@@ -87,7 +104,15 @@ namespace value { namespace tuple {
         template<class Collector, class Tuple, std::size_t...Is>
         void collect(Tuple&& tuple, Collector& col, std::index_sequence<Is...>)
         {
+#if __cplusplus > 201402L
             (col(std::get<Is>(std::forward<Tuple>(tuple))),...);
+#else
+            using expand = int[];
+            void(expand{0, (
+                            col(std::get<Is>(std::forward<Tuple>(tuple))),
+                            0)...});
+            
+#endif
         }
     }
     
