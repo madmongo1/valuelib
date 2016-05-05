@@ -1,5 +1,6 @@
 #pragma once
 #include <utility>
+#include <vector>
 
 namespace value { namespace data { namespace database {
 
