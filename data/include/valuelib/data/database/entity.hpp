@@ -2,6 +2,8 @@
 #include <utility>
 #include <vector>
 
+#include <valuelib/data/database_engine.hpp>
+
 namespace value { namespace data { namespace database {
 
 	template<class Database>
