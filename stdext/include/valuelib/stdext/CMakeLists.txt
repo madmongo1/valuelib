@@ -1,5 +1,6 @@
 add_sources(CMakeLists.txt
     byte_buffer.hpp
+    exception.hpp
     invoke.hpp
     key_iterator.hpp
     light_future.hpp

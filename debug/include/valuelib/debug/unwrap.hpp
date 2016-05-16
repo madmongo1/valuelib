@@ -2,6 +2,7 @@
 #include <ostream>
 #include <exception>
 #include <stdexcept>
+#include <sstream>
 #include "demangle.hpp"
 
 
@@ -41,9 +42,10 @@ namespace value { namespace debug {
                 }
             }
             
-            void write(std::ostream& os) const
+            std::ostream& write(std::ostream& os) const
             {
                 write(os, _e);
+                return os;
             }
             
             const std::exception& _e;
@@ -53,8 +55,7 @@ namespace value { namespace debug {
         template<class Formatter>
         std::ostream& operator<<(std::ostream& os, const unwrapper<Formatter>& u)
         {
-            u.write(os);
-            return os;
+            return u.write(os);
         }
     }
     

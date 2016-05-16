@@ -6,6 +6,7 @@ test_tree(test)
 
 
 add_library(ValueLib_stdext ${INTERFACE_FILES} ${SOURCE_FILES})
+target_link_libraries(ValueLib_stdext ValueLib_tuple ValueLib_debug)
 
 target_include_directories(
     ValueLib_stdext

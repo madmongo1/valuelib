@@ -55,6 +55,12 @@ namespace value { namespace tuple {
         return tuple_printer<std::decay_t<T>>(obj);
     }
 
+    template<std::size_t N>
+    auto print_tuple(const char (&str) [N])
+    {
+        return tuple_printer<const char (&)[N]>(str);
+    }
+
     template<class Iter>
     struct range
     {
@@ -123,6 +129,22 @@ namespace value { namespace tuple {
     {
         return printer(os);
     }
+    
+    template<std::size_t N>
+    struct tuple_printer<const char (&)[N]>
+    {
+        tuple_printer(const char (&a)[N]) : p(a) {}
+        
+        template<
+        class Stream
+        >
+        decltype(auto) operator()(Stream& os) const {
+            return os.write(p, size);
+        }
+        
+        const char* p;
+        static constexpr std::size_t size = N-1;
+    };
     
 
 

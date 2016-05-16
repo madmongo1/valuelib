@@ -23,7 +23,23 @@ namespace value { namespace tuple {
     }
     template<typename T, template <typename...> class Template>
     static constexpr auto IsSpecializationOf = impl::is_specialization_of<std::decay_t<T>, Template>::value;
+
     
+    template<class Func, class...Args>
+    void map(Func&& func, Args&&...args)
+    {
+#if __cplusplus > 201402L
+        (std::forward<Func>(func)(std::forward<Args>(args)),...);
+#else
+        using expand = int[];
+        void(expand{0,
+            (std::forward<Func>(func)(std::forward<Args>(args))),
+             0)...
+        });
+#endif
+        
+    }
+
     namespace impl
     {
         template<class Func, class Tuple, std::size_t...Is>
