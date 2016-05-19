@@ -30,10 +30,10 @@ namespace value { namespace data { namespace database {
 		}
 
         /// Cause the underlying database engine to create the entity
-		virtual void create(ddl_statement_type& stmt) const = 0;
+        virtual void create(ddl_statement_type& stmt) const {};
 
         /// Cause the underlying database engine to drop the entity
-		virtual void drop(ddl_statement_type& stmt) const = 0;
+        virtual void drop(ddl_statement_type& stmt) const {};
 
 		/// return a vector of references to entities that this one depends on
 		virtual const dependency_list_type& dependencies() const = 0;
