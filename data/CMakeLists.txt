@@ -2,6 +2,7 @@
 project(ValueLib_data)
 
 find_package(Threads)
+find_package(Boost)
 
 interface_tree(include)
 source_tree(src)

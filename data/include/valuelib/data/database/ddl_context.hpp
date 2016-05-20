@@ -60,60 +60,6 @@ namespace value { namespace data { namespace database {
             _edges.erase(std::unique(std::begin(_edges), std::end(_edges)),
                          std::end(_edges));
         }
-        /*
-
-		bool register_entity(const entity_type& entity, std::size_t first_legal_index = 0)
-        try
-		{
-            auto it = std::find_if(begin(), end(), [&entity](auto& r) {
-                return entity = r.get();
-            });
-            if (it == end())
-            {
-                
-            }
-            // see whether the entity has been seen before
-            auto it = std::find_if(begin(), end(),
-                                   [&entity](auto r){ return entity == r.get(); });
-            
-            // if so, then if it appears to be a dependency of this one, then this is an error
-            if (to_index(it) < first_legal_index) {
-                report_circular_dependency(entity, first_legal_index);
-//                throw std::invalid_argument("circular dependency detected");
-            }
-            
-            // otherwise, no work to do
-            if (it != end())
-                return false;
-            
-            // now find the position in the registry of the first of our dependencies
-            const auto& dependencies = entity.dependencies();
-            it = std::find_first_of(begin(), end(),
-                                    std::begin(dependencies), std::end(dependencies),
-                                    [](auto l, auto r) { return l.get() == r.get(); });
-            if (to_index(it) < first_legal_index) {
-                report_circular_dependency(entity, first_legal_index);
-//                throw std::invalid_argument("circular dependency detected");
-            }
-            
-            it = _entities.insert(it, entity);
-            first_legal_index = to_index(it) + 1;
-            for (auto dep : dependencies)
-            {
-                register_entity(dep, first_legal_index);
-            }
-            return true;
-		}
-        catch(const std::exception& e)
-        {
-            using namespace std::string_literals;
-            std::throw_with_nested(std::logic_error("register_entity("s +
-                                                    debug::demangle(typeid(entity))+
-                                                    ", " +
-                                                    std::to_string(first_legal_index) +
-                                                    ")"));
-        }
-        */
     
         void report_circular_dependency(const entity_type& entity, std::size_t first_legal_index)
         {
@@ -164,9 +110,14 @@ namespace value { namespace data { namespace database {
         using edge = std::pair<std::size_t, std::size_t>;
         using edge_vector = std::vector<edge>;
         
+        using graph_properties = boost::property<
+        boost::vertex_color_t,
+        boost::default_color_type
+        >;
+        
         typedef boost::adjacency_list<boost::vecS, boost::vecS,
         boost::bidirectionalS,
-        boost::property<boost::vertex_color_t, boost::default_color_type>
+        graph_properties
         > Graph;
         typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
 
@@ -225,11 +176,6 @@ namespace value { namespace data { namespace database {
                                return _entities[i];
                            });
             
-            std::cout << "make ordering: ";
-            for (auto ref : result)
-            {
-                std::cout << value::debug::demangle(typeid(ref.get())) << std::endl;
-            }
             return result;
         }
         
