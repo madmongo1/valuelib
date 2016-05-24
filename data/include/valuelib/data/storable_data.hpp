@@ -40,12 +40,12 @@ namespace value { namespace data {
     constexpr auto fixed_size(std::size_t len) { return limit_to_range(len, len); }
     constexpr auto maximum_size(std::size_t Max) { return limit_to_range(0, Max); }
     
-    constexpr void check_length(no_size_limits, std::size_t len)
+    inline constexpr void check_length(no_size_limits, std::size_t len)
     {
         
     }
 
-    /*constexpr*/ void check_length(limit_to_range rng, std::size_t len)
+    inline /*constexpr*/ void check_length(limit_to_range rng, std::size_t len)
     {
         if (len < rng.min()) {
             throw std::invalid_argument("insufficient data");
