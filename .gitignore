@@ -1,6 +1,9 @@
 build/
 dependencies/
 
+#emacs
+*~
+
 # Compiled Object files
 *.slo
 *.lo

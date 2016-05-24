@@ -45,7 +45,7 @@ namespace value { namespace data {
         
     }
 
-    constexpr void check_length(limit_to_range rng, std::size_t len)
+    /*constexpr*/ void check_length(limit_to_range rng, std::size_t len)
     {
         if (len < rng.min()) {
             throw std::invalid_argument("insufficient data");
