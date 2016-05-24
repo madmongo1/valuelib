@@ -33,7 +33,7 @@ namespace value { namespace tuple {
 #else
         using expand = int[];
         void(expand{0,
-            (std::forward<Func>(func)(std::forward<Args>(args))),
+            (std::forward<Func>(func)(std::forward<Args>(args)),
              0)...
         });
 #endif
