@@ -114,7 +114,7 @@ namespace value { namespace data {
         using storable_data_type = storable_data<Identifier, Type>;
         
         /// Defines the traits of this class. Defaults to the traits of the underling type
-        using storage_traits = storage_traits<underlying_type>;
+        using storage_traits = value::data::storage_traits<underlying_type>;
 
         /// Returns the (constexpr) identifer of the outer type
         static constexpr auto identifier() { return Identifier::identifier(); }
