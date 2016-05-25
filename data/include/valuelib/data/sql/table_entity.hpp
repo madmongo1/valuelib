@@ -27,13 +27,13 @@ namespace value { namespace data { namespace sql {
             
             void drop(statement_type& stmt) const override
             {
-                constexpr auto sql = sql_drop(sql_dialect(), Table());
+                static const auto sql = sql_drop(sql_dialect(), Table());
                 stmt.execute(sql.c_str());
             }
             
             dependency_list const & dependencies() const override
             {
-                static dependency_list _ {};
+                static const dependency_list _ {};
                 return _;
             }
             

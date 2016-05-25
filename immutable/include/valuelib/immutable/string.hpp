@@ -237,13 +237,15 @@ namespace value { namespace immutable {
     template<class String, EnableForImmutableString<String> = nullptr>
     constexpr auto quoted(String in)
     {
+        /*
         if (count(begin(in), end(in), '\''))
-            throw std::invalid_argument("It is not possible to enquote an immutable string that contains"
+            throw std::invalid_argumentß("It is not possible to enquote an immutable string that contains"
                                         " quotes (\"'\" characters). The short story is that the string "
                                         "length is part of the type and therefore must be formed from a "
                                         "constexpr literal. ALthough a character array is a literal, "
                                         "the individual characters in it are not."
                                         );
+                                             */
         return value::immutable::string("'") + in + "'";
     }
     
