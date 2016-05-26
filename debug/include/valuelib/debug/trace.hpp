@@ -56,7 +56,7 @@ namespace value { namespace debug {
             if (depth > model_size)
             {
                 std::string ret = std::to_string(depth);
-                ret.insert(std::end(ret), model + std::size(ret), model + model_size);
+                ret.insert(std::end(ret), model + ret.size(), model + model_size);
                 return ret;
             }
             return { model + model_size - depth, model + model_size };

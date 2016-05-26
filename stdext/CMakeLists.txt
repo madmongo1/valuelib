@@ -47,5 +47,6 @@ if(GTEST_FOUND)
         ${GTEST_BOTH_LIBRARIES})
     add_test(NAME
         test_all_stdext
-        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ValueLib_stdext_test)
+        COMMAND ValueLib_stdext_test
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 endif()

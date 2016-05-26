@@ -8,7 +8,6 @@
 #include <valuelib/data/storage.hpp>
 #include <valuelib/data/entity.hpp>
 
-#include <valuelib/data/sql/mysql/dialect.hpp>
 #include <valuelib/data/identifier.hpp>
 
 #include <valuelib/debug/demangle.hpp>
@@ -141,22 +140,6 @@ struct tbl_session : value::data::table<tbl_session>
     }
     
 };
-
-TEST(testStorage, testBasics)
-{
-    using namespace std::string_literals;
-    
-    static constexpr auto sql_create = value::data::sql::mysql::sql_create(tbl_session());
-    EXPECT_EQ("CREATE TABLE IF NOT EXISTS `tbl_session`(\n"
-              "`session_cookie` VARCHAR(36) NOT NULL,\n"
-              "`login_state` SET('logged_out','logged_in') NOT NULL DEFAULT 'logged_out',\n"
-              "`session_mru` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n"
-              "`user_id` VARCHAR(250) NULL"
-              ",\nPRIMARY KEY (`session_cookie`)\n"
-              ") ENGINE=InnoDB DEFAULT CHARSET=utf8",
-              sql_create);
-    
-}
 
 TEST(testStorage, testNativeDeduction)
 {
