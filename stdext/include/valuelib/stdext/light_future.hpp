@@ -81,7 +81,7 @@ namespace value { namespace stdext {
             exception
         };
         
-        shared_state_common(which_type type)
+        constexpr shared_state_common(which_type type)
         : _which(type)
         {}
         
@@ -90,7 +90,7 @@ namespace value { namespace stdext {
         }
         
     protected:
-        void set_which(which_type new_state)
+        constexpr void set_which(which_type new_state) 
         {
             _which = new_state;
         }

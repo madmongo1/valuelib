@@ -40,7 +40,7 @@ find_package(GTest)
 if(GTEST_FOUND)
     include_directories(BEFORE SYSTEM ${GTEST_INCLUDE_DIRS})
 	add_executable(ValueLib_data_test ${TEST_FILES})
-	target_link_libraries(ValueLib_data_test ${CMAKE_THREAD_LIBS_INIT} ValueLib_data ${GTEST_BOTH_LIBRARIES})
+	target_link_libraries(ValueLib_data_test ValueLib_data ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
     add_test(NAME test_all_data COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ValueLib_data_test)
 endif()
 

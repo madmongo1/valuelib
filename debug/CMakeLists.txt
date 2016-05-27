@@ -39,7 +39,8 @@ find_package(GTest)
 if(GTEST_FOUND)
     include_directories(BEFORE SYSTEM ${GTEST_INCLUDE_DIRS})
 	add_executable(ValueLib_debug_test ${TEST_FILES})
-	target_link_libraries(ValueLib_debug_test ${CMAKE_THREAD_LIBS_INIT} ValueLib_debug ${GTEST_BOTH_LIBRARIES})
+	target_link_libraries(ValueLib_debug_test ValueLib_debug 
+            ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
     add_test(NAME test_all_debug COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ValueLib_debug_test)
 endif()
 

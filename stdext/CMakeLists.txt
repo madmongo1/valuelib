@@ -42,9 +42,8 @@ if(GTEST_FOUND)
     include_directories(BEFORE SYSTEM ${GTEST_INCLUDE_DIRS})
     add_executable(ValueLib_stdext_test ${TEST_FILES})
     target_link_libraries(ValueLib_stdext_test
-        ${CMAKE_THREAD_LIBS_INIT}
         ValueLib_stdext
-        ${GTEST_BOTH_LIBRARIES})
+        ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
     add_test(NAME
         test_all_stdext
         COMMAND ValueLib_stdext_test
