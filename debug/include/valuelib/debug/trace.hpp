@@ -14,33 +14,112 @@
 #pragma once
 #include <iostream>
 #include <utility>
+#include <mutex>
+#include <thread>
 
 namespace value { namespace debug {
     
     struct sentinel_type {};
     static constexpr sentinel_type sentinel{};
+    
+    struct classname {
+        constexpr classname(const char* name) : _name(name) {}
+        const char* _name;
 
-    namespace detail {
-        template<size_t I> std::ostream& emit_comma(std::ostream& os) { return os << ", "; }
-        template<> std::ostream& emit_comma<0>(std::ostream& os) { return os; }
-        template<size_t I, class T> std::ostream& emit_comma(std::ostream& os, const T& t) {
-            return emit_comma<I>(os) << t;
+        friend std::ostream& operator<<(std::ostream& os, const classname& cn) {
+            return os << cn._name;
         }
+
+    };
+    
+    struct method {
+        constexpr method(const char* name) : _name(name) {}
+        const char* _name;
+
+        friend std::ostream& operator<<(std::ostream& os, const method& m) {
+            return os << m._name;
+        }
+    };
+    
+    namespace detail {
+        template<size_t N>
+        struct emit_comma
+        {
+            std::ostream& operator()(std::ostream& os) const { return os << ", "; }
+            template<class T>
+            std::ostream& operator()(std::ostream& os, const T& t) const {
+                return emit_comma<N>()(os) << t;
+            }
+        };
         
+        template<>
+        inline
+        std::ostream& emit_comma<0>::operator()(std::ostream& os) const { return os; }
+
     }
     struct tracer
     {
+        struct common_data
+        {
+            using mutex_type = std::mutex;
+            using lock_type = std::unique_lock<mutex_type>;
+            
+            lock_type get_lock() { return lock_type(_mutex); }
+
+            std::mutex _mutex;
+        };
+        
+        static common_data& get_common_data() {
+            static common_data _data {};
+            return _data;
+        }
+        
+        
         template<class...Args>
         tracer(std::ostream& os, const char* funcname, Args&&...args)
         {
             auto& d = depth();
-            os << lead_in(d) << funcname << '(';
+            auto lock = get_common_data().get_lock();
+            os
+            << std::this_thread::get_id() << " : "
+            << lead_in(d)
+            << funcname << '(';
             emit_args(std::cerr,
                       std::make_index_sequence<sizeof...(args)>(),
                       std::forward<Args>(args)...)
             << ')' << std::endl;
             ++d;
         }
+        template<class...Args>
+        tracer(std::ostream& os, classname cn, method m, Args&&...args)
+        {
+            auto& d = depth();
+            auto lock = get_common_data().get_lock();
+            os
+            << std::this_thread::get_id() << " : "
+            << lead_in(d) << cn << "::" << m << '(';
+            emit_args(os,
+                      std::make_index_sequence<sizeof...(args)>(),
+                      std::forward<Args>(args)...)
+            << ')' << std::endl;
+            ++d;
+        }
+        
+        template<class...Args>
+        tracer(std::ostream& os, method m, Args&&...args)
+        {
+            auto& d = depth();
+            auto lock = get_common_data().get_lock();
+            os
+            << std::this_thread::get_id() << " : "
+            << lead_in(d) << m << '(';
+            emit_args(os,
+                      std::make_index_sequence<sizeof...(args)>(),
+                      std::forward<Args>(args)...)
+            << ')' << std::endl;
+            ++d;
+        }
+        
         tracer(const tracer&) = delete;
         tracer& operator=(const tracer&) = delete;
         
@@ -67,7 +146,7 @@ namespace value { namespace debug {
         static std::ostream& emit_args(std::ostream& os, std::index_sequence<Is...>, Ts&&...ts)
         {
             using expand = int[];
-            void(expand{ 0, (detail::emit_comma<Is>(os, ts),0)...});
+            void(expand{ 0, (detail::emit_comma<Is>()(os, ts),0)...});
             return os;
         }
         
@@ -79,6 +158,7 @@ namespace value { namespace debug {
     };
     
 }}
+
 /*
 #define VALUE_DEBUG_CONCAT(a, b) a ## b
 #define VALUE_DEBUG_UNIQUENAME(prefix) VALUE_DEBUG_CONCAT(prefix, __COUNTER__)
