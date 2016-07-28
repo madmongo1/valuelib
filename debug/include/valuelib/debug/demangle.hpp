@@ -18,6 +18,10 @@ namespace value { namespace debug {
         ptr_type _ptr;
     };
 
+    inline bool operator==(const std::string& l, const demangled_string& r) {
+        return std::strcmp(l.c_str(), r.c_str()) == 0;
+    }
+
     inline std::ostream& operator<<(std::ostream& os, const demangled_string& str)
     {
         return str.write(os);
