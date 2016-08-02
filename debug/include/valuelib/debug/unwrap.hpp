@@ -23,10 +23,23 @@ namespace value { namespace debug {
         template<class Formatter>
         struct unwrapper
         {
-            unwrapper(const std::exception& e, Formatter&& formatter)
-            : _e(e)
+            unwrapper(std::exception_ptr pe, Formatter&& formatter)
+            : pe(pe)
             , _format(std::move(formatter))
             {}
+            
+            void write(std::ostream& os, std::exception_ptr ep, size_t depth = 0) const
+            {
+                try {
+                    std::rethrow_exception(ep);
+                }
+                catch(const std::exception& e) {
+                    write(os, e, depth);
+                }
+                catch(...) {
+                    _format(os, nonstandard_exception(), depth);
+                }
+            }
             
             void write(std::ostream& os, const std::exception& e, size_t depth = 0) const
             {
@@ -44,11 +57,11 @@ namespace value { namespace debug {
             
             std::ostream& write(std::ostream& os) const
             {
-                write(os, _e);
+                write(os, pe);
                 return os;
             }
             
-            const std::exception& _e;
+            const std::exception_ptr pe;
             Formatter _format;
         };
         
@@ -57,6 +70,16 @@ namespace value { namespace debug {
         {
             return u.write(os);
         }
+
+        template<class Formatter>
+        std::string to_string(const unwrapper<Formatter>& u)
+        {
+            std::ostringstream ss;
+            u.write(ss);
+            return ss.str();
+        }
+        
+        
     }
     
     std::string tidy_exception_name(const std::exception& e);
@@ -76,7 +99,7 @@ namespace value { namespace debug {
     auto unwrap(const std::exception& e,
                 Formatter&& formatter = indenting_formatter())
     {
-        return detail::unwrapper<Formatter>(e,
+        return detail::unwrapper<Formatter>(make_exception_ptr(e),
                                             std::forward<Formatter>(formatter));
     }
     
@@ -84,21 +107,15 @@ namespace value { namespace debug {
     auto unwrap(const std::exception_ptr& ep = std::current_exception(),
                 Formatter&& formatter = indenting_formatter())
     {
-        try {
+        if (not ep)
+        {
             static const no_exception _no_exception {};
-            std::rethrow_exception(ep);
-            return detail::unwrapper<Formatter>(_no_exception,
+            return detail::unwrapper<Formatter>(std::make_exception_ptr(_no_exception),
                                                 std::forward<Formatter>(formatter));
         }
-        catch(const std::exception& e)
-        {
-            return detail::unwrapper<Formatter>(e,
+        else {
+            return detail::unwrapper<Formatter>(ep,
                                                 std::forward<Formatter>(formatter));
-        }
-        catch(...)
-        {
-            static const nonstandard_exception _nonstandard {};
-            return unwrap(_nonstandard, std::forward<Formatter>(formatter));
         }
     }
     

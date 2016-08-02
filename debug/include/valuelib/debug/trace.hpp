@@ -75,8 +75,8 @@ namespace value { namespace debug {
         }
         
         
-        template<class...Args>
-        tracer(std::ostream& os, const char* funcname, Args&&...args)
+        template<class StringLike, class...Args>
+        tracer(std::ostream& os, StringLike&& funcname, Args&&...args)
         {
             auto& d = depth();
             auto lock = get_common_data().get_lock();
@@ -84,7 +84,7 @@ namespace value { namespace debug {
             << std::this_thread::get_id() << " : "
             << lead_in(d)
             << funcname << '(';
-            emit_args(std::cerr,
+            emit_args(os,
                       std::make_index_sequence<sizeof...(args)>(),
                       std::forward<Args>(args)...)
             << ')' << std::endl;
