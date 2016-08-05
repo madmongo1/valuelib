@@ -17,7 +17,9 @@
 #include <mutex>
 #include <thread>
 #include <iomanip>
+#include <cassert>
 #include <valuelib/debug/demangle.hpp>
+#include <boost/log/trivial.hpp>
 
 namespace value { namespace debug {
     
@@ -63,6 +65,17 @@ namespace value { namespace debug {
         
     };
     
+    template<class Arg>
+    struct arg_proxy
+    {
+        const char* name;
+        Arg const& arg;
+        friend auto debug_tuple(const arg_proxy& ap) { return std::make_tuple(std::tie(ap.name, ap.arg)); }
+    };
+    template<class Arg> auto make_arg_proxy(const char* name, const Arg& arg)
+    {
+        return arg_proxy<Arg> { name, arg };
+    }
     
     template<class T>
     struct has_debug_tuple {
@@ -74,6 +87,17 @@ namespace value { namespace debug {
     
     template<class T>
     auto print(const T& t);
+    
+    inline auto print(const char* p)
+    {
+        return std::quoted(p);
+    }
+    
+    inline auto print(const std::string& s)
+    {
+        return std::quoted(s);
+    }
+
 
     namespace detail {
         template<class T, typename = void>
@@ -99,6 +123,7 @@ namespace value { namespace debug {
             template<std::size_t N, class U>
             static void emit_item(std::ostream& os, std::integral_constant<std::size_t, N> i, const U& u)
             {
+                using value::debug::print;
                 os << sep(i);
                 os << std::get<0>(u) << ": " << print(std::get<1>(u));
             }
@@ -135,15 +160,6 @@ namespace value { namespace debug {
         return detail::debug_printer<T>(t);
     }
     
-    inline auto print(const char* p)
-    {
-        return std::quoted(p);
-    }
-    
-    inline auto print(const std::string& s)
-    {
-        return std::quoted(s);
-    }
 
     
     
@@ -270,6 +286,135 @@ namespace value { namespace debug {
             return d;
         }
     };
+    
+    template<class Module>
+    constexpr bool tracing_enabled(const Module& m)
+    {
+        return false;
+    }
+    
+    namespace detail {
+    template<class...Args>
+    struct arg_emitter
+    {
+        arg_emitter(Args const &... args) : _data(args...) {}
+        
+        
+        template<class T, std::size_t I>
+        static void emit_arg(std::ostream& os, std::integral_constant<std::size_t, I>, const T& arg)
+        {
+            os << ", " << print(arg);
+        }
+        
+        template<class T>
+        static void emit_arg(std::ostream& os, std::integral_constant<std::size_t, 0>, const T& arg)
+        {
+            os << print(arg);
+        }
+        
+        template<class Tuple, std::size_t...Is>
+        static void emit(std::ostream& os, Tuple& t, std::index_sequence<Is...>)
+        {
+            using expand = int[];
+            void(expand{ 0,
+                ((emit_arg(os, std::integral_constant<std::size_t, Is>(), std::get<Is>(t))), 0)...
+            });
+        }
+        
+        void operator()(std::ostream& os) const
+        {
+            emit(os, _data, std::make_index_sequence<sizeof...(Args)>());
+        }
+        
+        std::tuple<Args const&...> _data;
+        
+        friend std::ostream& operator<<(std::ostream& os, arg_emitter ae)
+        {
+            ae(os);
+            return os;
+        }
+    };
+    }
+    
+    template<class...Args>
+    auto emit_args(const Args&...args)
+    {
+        return detail::arg_emitter<Args...>(args...);
+    }
+
+    
+    struct conditional_tracer
+    {
+        constexpr conditional_tracer(bool active) : active(active) {}
+        constexpr conditional_tracer(conditional_tracer&& r) : active(r.active) { r.active = false; }
+        conditional_tracer& operator=(conditional_tracer&& r) { std::swap(active, r.active); return *this; }
+        ~conditional_tracer() {
+            if (active) {
+                --depth();
+            }
+        }
+        
+        static
+        std::string lead_in(std::size_t dist = depth())
+        {
+            constexpr const char model[] = "---------->";
+            constexpr auto model_size = std::extent<decltype(model)>::value -1;
+            if (dist > model_size)
+            {
+                std::string ret = std::to_string(dist);
+                ret.insert(std::end(ret), model + ret.size(), model + model_size);
+                return ret;
+            }
+            return { model + model_size - dist, model + model_size };
+        }
+        
+        template<class Arg>
+        decltype(auto) ret (Arg& arg)
+        {
+            if (active) {
+                BOOST_LOG_TRIVIAL(trace) << lead_in(depth() - 1) << "returns: " << emit_args(arg);
+            }
+            return arg;
+        }
+        
+        template<class Arg>
+        decltype(auto) ret (Arg&& arg)
+        {
+            if (active) {
+                BOOST_LOG_TRIVIAL(trace) << lead_in(depth() - 1) << "returns: " << emit_args(arg);
+            }
+            return std::move(arg);
+        }
+        
+        template<class...Args>
+        void say(const char* message, const Args&...args)
+        {
+            if (active) {
+                BOOST_LOG_TRIVIAL(trace) << lead_in(depth()) << std::quoted(message) << " : " << emit_args(args...);
+            }
+        }
+        
+
+
+        bool active = false;
+        static std::size_t& depth() {
+            static __thread std::size_t _depth = 0;
+            return _depth;
+        }
+    };
+
+    template<class Module, class...Args>
+    conditional_tracer trace(const Module& module, classname_type classname, method m, const Args&...args)
+    {
+        if (not tracing_enabled(module)) return { false };
+        conditional_tracer tracer { true };
+        auto& depth = tracer.depth();
+        BOOST_LOG_TRIVIAL(trace) << tracer.lead_in(depth) << classname << "::" << m << '(' << emit_args(args...) << ')';
+        ++depth;
+        return tracer;
+    }
+    
+
     
 }}
 
