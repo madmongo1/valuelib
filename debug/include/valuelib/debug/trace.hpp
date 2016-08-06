@@ -20,6 +20,8 @@
 #include <cassert>
 #include <valuelib/debug/demangle.hpp>
 #include <boost/log/trivial.hpp>
+#include <typeinfo>
+#include <typeindex>
 
 namespace value { namespace debug {
     
@@ -84,21 +86,27 @@ namespace value { namespace debug {
         static constexpr bool value = decltype(test<T>(nullptr))::value;
     };
     template<class T> static constexpr bool HasDebugTuple = has_debug_tuple<T>::value;
-    
+
+    //
+    // client classes should override debug_print if they have special needs
+    //
     template<class T>
-    auto print(const T& t);
-    
-    inline auto print(const char* p)
-    {
-        return std::quoted(p);
+    std::ostream& debug_print(std::ostream& os, const T& t) {
+        return os << t;
     }
     
-    inline auto print(const std::string& s)
+    inline
+    std::ostream& debug_print(std::ostream& os, const std::type_info& info)
     {
-        return std::quoted(s);
+        return os << value::debug::demangle(info);
     }
 
-
+    inline
+    std::ostream& debug_print(std::ostream& os, std::type_index info)
+    {
+        return os << value::debug::demangle(info);
+    }
+    
     namespace detail {
         template<class T, typename = void>
         struct debug_printer
@@ -106,10 +114,31 @@ namespace value { namespace debug {
             debug_printer(const T& t) : _t(t) {};
             
             std::ostream& operator()(std::ostream& os) const {
-                return os << _t;
+                using ::value::debug::debug_print;
+                return debug_print(os, _t);
             }
             const T& _t;
         };
+    }
+    
+    template<class T>
+    auto print(const T& t)
+    {
+        return detail::debug_printer<T>(t);
+    }
+    
+    inline std::ostream& debug_print(std::ostream& os, const char* p)
+    {
+        return os << std::quoted(p);
+    }
+    
+    inline std::ostream& debug_print(std::ostream& os, const std::string s)
+    {
+        return os << std::quoted(s);
+    }
+    
+
+    namespace detail {
         
         template<class T>
         struct debug_printer<T, std::enable_if_t<HasDebugTuple<T>>>
@@ -154,11 +183,6 @@ namespace value { namespace debug {
 
     }
     
-    template<class T>
-    auto print(const T& t)
-    {
-        return detail::debug_printer<T>(t);
-    }
     
 
     
