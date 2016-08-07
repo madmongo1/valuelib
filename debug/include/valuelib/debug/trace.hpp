@@ -19,6 +19,7 @@
 #include <iomanip>
 #include <cassert>
 #include <valuelib/debug/demangle.hpp>
+#include <valuelib/debug/unwrap.hpp>
 #include <boost/log/trivial.hpp>
 #include <typeinfo>
 #include <typeindex>
@@ -105,6 +106,12 @@ namespace value { namespace debug {
     std::ostream& debug_print(std::ostream& os, std::type_index info)
     {
         return os << value::debug::demangle(info);
+    }
+    
+    inline
+    std::ostream& debug_print(std::ostream& os, const std::exception_ptr& ep)
+    {
+        return os << value::debug::unwrap(ep);
     }
     
     namespace detail {
