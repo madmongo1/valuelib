@@ -23,6 +23,7 @@
 #include <boost/log/trivial.hpp>
 #include <typeinfo>
 #include <typeindex>
+#include <chrono>
 
 namespace value { namespace debug {
     
@@ -94,6 +95,19 @@ namespace value { namespace debug {
     template<class T>
     std::ostream& debug_print(std::ostream& os, const T& t) {
         return os << t;
+    }
+    
+    inline std::ostream& debug_print(std::ostream& os, std::chrono::milliseconds ms)
+    {
+        return os << (std::to_string(ms.count()) + "ms");
+    }
+    
+    inline std::ostream& debug_print(std::ostream& os, const std::chrono::seconds& s)
+    {
+        auto count = s.count();
+        os << count;
+        os << "s";
+        return os;
     }
     
     inline
