@@ -3,6 +3,7 @@
 #include <ostream>
 #include <typeinfo>
 #include <typeindex>
+#include <cstring>
 
 namespace value { namespace debug {
 
