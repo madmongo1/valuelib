@@ -24,6 +24,7 @@
 #include <typeinfo>
 #include <typeindex>
 #include <chrono>
+#include <boost/optional.hpp>
 
 namespace value { namespace debug {
     
@@ -89,6 +90,9 @@ namespace value { namespace debug {
     };
     template<class T> static constexpr bool HasDebugTuple = has_debug_tuple<T>::value;
 
+    template<class T>
+    auto print(const T& t);
+
     //
     // client classes should override debug_print if they have special needs
     //
@@ -96,6 +100,15 @@ namespace value { namespace debug {
     std::ostream& debug_print(std::ostream& os, const T& t) {
         return os << t;
     }
+    
+    template<class T> std::ostream& debug_print(std::ostream& os, const boost::optional<T>& opt)
+    {
+        if (opt)
+            return os << print(opt.value());
+        else
+            return os << "null";
+    }
+
     
     inline std::ostream& debug_print(std::ostream& os, std::chrono::milliseconds ms)
     {
@@ -125,8 +138,13 @@ namespace value { namespace debug {
     inline
     std::ostream& debug_print(std::ostream& os, const std::exception_ptr& ep)
     {
-        return os << value::debug::unwrap(ep);
+        if (ep)
+            return os << value::debug::unwrap(ep);
+        else
+            return os << "null";
     }
+    
+
     
     namespace detail {
         template<class T, typename = void>
@@ -157,6 +175,9 @@ namespace value { namespace debug {
     {
         return os << std::quoted(s);
     }
+    
+    
+
     
 
     namespace detail {
@@ -458,6 +479,8 @@ namespace value { namespace debug {
         ++depth;
         return tracer;
     }
+    
+
     
 
     
