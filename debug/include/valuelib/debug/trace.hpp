@@ -24,6 +24,7 @@
 #include <typeinfo>
 #include <typeindex>
 #include <chrono>
+#include <vector>
 #include <boost/optional.hpp>
 
 namespace value { namespace debug {
@@ -176,11 +177,30 @@ namespace value { namespace debug {
         return os << std::quoted(s);
     }
     
-    
-
-    
 
     namespace detail {
+        
+        template<class V, class A>
+        struct debug_printer<std::vector<V, A>>
+        {
+            debug_printer(const std::vector<V, A>& container)
+            : _container(container)
+            {}
+            
+            std::ostream& operator()(std::ostream& os) const
+            {
+                os << "[";
+                auto sep = " ";
+                for (auto const& i : _container)
+                {
+                    os << sep << print(i);
+                    sep = ", ";
+                }
+                return os << " ]";
+            }
+            
+            std::vector<V, A> const& _container;
+        };
         
         template<class T>
         struct debug_printer<T, std::enable_if_t<HasDebugTuple<T>>>
