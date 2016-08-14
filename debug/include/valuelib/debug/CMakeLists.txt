@@ -1,7 +1,10 @@
 add_sources(
 CMakeLists.txt
-any_printer.hpp
 demangle.hpp
+emit_args.hpp
+method.hpp
+object.hpp
+print.hpp
 trace.hpp
 unwrap.hpp
 )

@@ -12,6 +12,9 @@
  */
 
 #pragma once
+#include <valuelib/debug/print.hpp>
+#include <valuelib/debug/method.hpp>
+
 #include <iostream>
 #include <utility>
 #include <mutex>
@@ -64,13 +67,6 @@ namespace value { namespace debug {
         }
     };
     
-    template<class Type>
-    struct printable
-    {
-        auto classname() const { return ::value::debug::classname(this); }
-        
-    };
-    
     template<class Arg>
     struct arg_proxy
     {
@@ -90,9 +86,6 @@ namespace value { namespace debug {
         static constexpr bool value = decltype(test<T>(nullptr))::value;
     };
     template<class T> static constexpr bool HasDebugTuple = has_debug_tuple<T>::value;
-
-    template<class T>
-    auto print(const T& t);
 
     //
     // client classes should override debug_print if they have special needs
@@ -161,11 +154,6 @@ namespace value { namespace debug {
         };
     }
     
-    template<class T>
-    auto print(const T& t)
-    {
-        return detail::debug_printer<T>(t);
-    }
     
     inline std::ostream& debug_print(std::ostream& os, const char* p)
     {
@@ -249,11 +237,6 @@ namespace value { namespace debug {
 
     
     
-    
-    template<class Type>
-    std::ostream& operator<<(std::ostream& os, const printable<Type>& p)
-    {
-    }
     
     
     
@@ -379,54 +362,6 @@ namespace value { namespace debug {
         return false;
     }
     
-    namespace detail {
-    template<class...Args>
-    struct arg_emitter
-    {
-        arg_emitter(Args const &... args) : _data(args...) {}
-        
-        
-        template<class T, std::size_t I>
-        static void emit_arg(std::ostream& os, std::integral_constant<std::size_t, I>, const T& arg)
-        {
-            os << ", " << print(arg);
-        }
-        
-        template<class T>
-        static void emit_arg(std::ostream& os, std::integral_constant<std::size_t, 0>, const T& arg)
-        {
-            os << print(arg);
-        }
-        
-        template<class Tuple, std::size_t...Is>
-        static void emit(std::ostream& os, Tuple& t, std::index_sequence<Is...>)
-        {
-            using expand = int[];
-            void(expand{ 0,
-                ((emit_arg(os, std::integral_constant<std::size_t, Is>(), std::get<Is>(t))), 0)...
-            });
-        }
-        
-        void operator()(std::ostream& os) const
-        {
-            emit(os, _data, std::make_index_sequence<sizeof...(Args)>());
-        }
-        
-        std::tuple<Args const&...> _data;
-        
-        friend std::ostream& operator<<(std::ostream& os, arg_emitter ae)
-        {
-            ae(os);
-            return os;
-        }
-    };
-    }
-    
-    template<class...Args>
-    auto emit_args(const Args&...args)
-    {
-        return detail::arg_emitter<Args...>(args...);
-    }
 
     
     struct conditional_tracer
@@ -501,8 +436,82 @@ namespace value { namespace debug {
     }
     
 
+    struct lead_in
+    {
+        std::size_t depth;
+        friend std::ostream& operator<<(std::ostream& os, const lead_in& li)
+        {
+            if(auto depth = li.depth)
+            {
+                static constexpr auto ch = '-';
+                while (--depth) {
+                    os.put(ch);
+                }
+                os.put('>');
+            }
+            
+            return os;
+        }
+    };
     
+    struct lead_out
+    {
+        std::size_t depth;
+        friend std::ostream& operator<<(std::ostream& os, const lead_out& li)
+        {
+            auto ch = '<';
+            
+            if(auto depth = li.depth)
+            {
+                while (depth--) {
+                    os.put(ch);
+                    ch = '-';
+                }
+            }
+            
+            return os;
+        }
+    };
+    
+    
+    struct trace_level
+    {
+        trace_level(bool active)
+        : _depth(active ? ++_current_depth : 0)
+        {
+        }
+        trace_level(trace_level const&) = delete;
+        trace_level& operator=(trace_level const&) = delete;
+        
+        ~trace_level() {
+            if (_depth)
+                --_current_depth;
+        }
+        
+        auto get_lead_in() const
+        {
+            return lead_in { _depth ? _depth - 1 : _depth };
+        }
+        
+        auto say_lead_in() const
+        {
+            return lead_in { _depth };
+        }
+        
+        auto get_lead_out() const
+        {
+            return lead_out { _depth ? _depth - 1 : _depth };
+        }
+        
+        bool active() const {
+            return _depth != 0;
+        }
 
+        
+        const std::size_t _depth;
+        static __thread std::size_t _current_depth;
+    };
+    
     
 }}
 
@@ -523,3 +532,18 @@ namespace value { namespace debug {
  value::debug::sentinel \
  }
  */
+
+#define VALUE_DEBUG_TRACE(module, ...) \
+const value::debug::trace_level value_debug_trace_level(tracing_enabled(module)); \
+if (value_debug_trace_level.active()) \
+BOOST_LOG_TRIVIAL(trace) << value_debug_trace_level.get_lead_in()
+
+#define VALUE_DEBUG_SAY() \
+if (value_debug_trace_level.active()) \
+    BOOST_LOG_TRIVIAL(trace) << value_debug_trace_level.say_lead_in()
+
+#define VALUE_DEBUG_RETURN(arg) \
+    if (value_debug_trace_level.active()) \
+        BOOST_LOG_TRIVIAL(trace) << value_debug_trace_level.get_lead_out() << "returns: " << value::debug::print(arg)
+
+
