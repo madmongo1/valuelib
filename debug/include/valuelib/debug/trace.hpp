@@ -12,6 +12,8 @@
  */
 
 #pragma once
+#include <valuelib/debug/print.hpp>
+
 #include <iostream>
 #include <utility>
 #include <mutex>
@@ -64,13 +66,6 @@ namespace value { namespace debug {
         }
     };
     
-    template<class Type>
-    struct printable
-    {
-        auto classname() const { return ::value::debug::classname(this); }
-        
-    };
-    
     template<class Arg>
     struct arg_proxy
     {
@@ -90,9 +85,6 @@ namespace value { namespace debug {
         static constexpr bool value = decltype(test<T>(nullptr))::value;
     };
     template<class T> static constexpr bool HasDebugTuple = has_debug_tuple<T>::value;
-
-    template<class T>
-    auto print(const T& t);
 
     //
     // client classes should override debug_print if they have special needs
@@ -161,11 +153,6 @@ namespace value { namespace debug {
         };
     }
     
-    template<class T>
-    auto print(const T& t)
-    {
-        return detail::debug_printer<T>(t);
-    }
     
     inline std::ostream& debug_print(std::ostream& os, const char* p)
     {
@@ -249,11 +236,6 @@ namespace value { namespace debug {
 
     
     
-    
-    template<class Type>
-    std::ostream& operator<<(std::ostream& os, const printable<Type>& p)
-    {
-    }
     
     
     
@@ -395,7 +377,7 @@ namespace value { namespace debug {
         template<class T>
         static void emit_arg(std::ostream& os, std::integral_constant<std::size_t, 0>, const T& arg)
         {
-            os << print(arg);
+            os << value::debug::print(arg);
         }
         
         template<class Tuple, std::size_t...Is>

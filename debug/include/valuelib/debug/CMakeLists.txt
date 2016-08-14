@@ -2,6 +2,8 @@ add_sources(
 CMakeLists.txt
 any_printer.hpp
 demangle.hpp
+object.hpp
+print.hpp
 trace.hpp
 unwrap.hpp
 )
