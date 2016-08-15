@@ -23,11 +23,12 @@ namespace value { namespace debug {
     template<class N, class V>
     struct printer<nvp_type<N, V>>
     {
-        void operator()(std::ostream& os, nvp_type<N, V> const& nvp)
+        decltype(auto) operator()(std::ostream& os, nvp_type<N, V> const& nvp) const
         {
-            os << nvp;
+            return os << nvp;
         }
     };
+
     
     template<class N, class T>
     auto nvp(N const& name, T const& value)
@@ -79,6 +80,12 @@ namespace value { namespace debug {
         Pairs _pairs;
     };
     
+    
+    inline auto object_tuple()
+    {
+        return std::make_tuple();
+    }
+    
     template<class Name, class Value>
     auto object_tuple(Name const& name, Value const& value)
     {
@@ -92,12 +99,22 @@ namespace value { namespace debug {
                               object_tuple(rest...));
     }
     
-    template<class Name, class Value, class...Pairs>
-    auto object(Name const& name, Value const& value, Pairs const&... rest)
+    template<class...Pairs>
+    auto object(Pairs const&... rest)
     {
-        auto tuple = object_tuple(name, value, rest...);
+        auto tuple = object_tuple(rest...);
         using tuple_type = decltype(tuple);
         return object_type<tuple_type> { std::move(tuple) };
     }
+    
+    template<class Pairs>
+    struct printer<object_type<Pairs>>
+    {
+        decltype(auto) operator()(std::ostream& os, object_type<Pairs> const& pairs) const
+        {
+            return os << pairs;
+        }
+    };
+
 
 }}

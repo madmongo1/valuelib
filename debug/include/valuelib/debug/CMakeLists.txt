@@ -1,10 +1,14 @@
 add_sources(
 CMakeLists.txt
+chrono.hpp
 demangle.hpp
 emit_args.hpp
+exception.hpp
 method.hpp
 object.hpp
 print.hpp
 trace.hpp
+typeinfo.hpp
 unwrap.hpp
+vector.hpp
 )

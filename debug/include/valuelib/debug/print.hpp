@@ -5,8 +5,102 @@
 
 namespace value { namespace debug {
     
-    template<class T, typename = void>
+    namespace detail {
+        template<class T>
+        struct is_ostreamable
+        {
+            template<class Y> static auto test(const Y* p) -> decltype(std::declval<std::ostream&>() << (*p), void(), std::true_type());
+            template<class Y> static auto test(...) -> decltype(std::false_type());
+            
+            using type = decltype(test((const T*)0));
+            static constexpr auto value = type::value;
+        };
+    }
+    template<class T> using is_ostreamable = typename detail::is_ostreamable<T>::type;
+    
+    namespace detail {
+        template<class T>
+        struct has_as_object {
+            template<class U> static auto test(const U*p) -> decltype(as_object(*p), void(), std::true_type());
+            template<class U> static auto test(...) -> decltype(std::false_type());
+            using type = decltype(test<T>(nullptr));
+            static constexpr bool value = type::value;
+        };
+    }
+    template<class T> using has_as_object = typename detail::has_as_object<T>::type;
+    
+    namespace detail {
+        template<class T>
+        struct has_debug_print {
+            template<class U> static auto test(U*p) -> decltype(debug_print(std::declval<std::ostream&>(), *p), void(), std::true_type());
+            template<class U> static auto test(...) -> decltype(std::false_type());
+            using type = decltype(test<T>(nullptr));
+            static constexpr bool value = type::value;
+        };
+    }
+    template<class T> using has_debug_print = typename detail::has_debug_print<T>::type;
+    
+    
+    
+    template<class T>
     struct printer;
+    
+    template<class T>
+    struct printer
+    {
+        template<class U>
+        auto operator()(std::ostream& os, U const& u)
+        -> std::enable_if_t<has_as_object<U>::value and not has_debug_print<U>::value, std::ostream&>
+        {
+            os << as_object(u);
+            return os;
+        }
+
+        template<class U>
+        auto operator()(std::ostream& os, U const& u)
+        -> std::enable_if_t<has_as_object<U>::value and has_debug_print<U>::value, std::ostream&>
+        {
+            debug_print(os, u);
+            return os;
+        }
+
+        template<class U>
+        auto operator()(std::ostream& os, U const& u)
+        -> std::enable_if_t<not has_as_object<U>::value and has_debug_print<U>::value, std::ostream&>
+        {
+            debug_print(os, u);
+            return os;
+        }
+
+        template<class U>
+        auto operator()(std::ostream& os, U const& u)
+        -> std::enable_if_t<not has_as_object<U>::value and not has_debug_print<U>::value, std::ostream&>
+        {
+            os << std::addressof(u);
+            return os;
+        }
+    };
+    
+    // specialise for straight-through types
+    
+    template<>
+    struct printer<bool>
+    {
+        void operator()(std::ostream& os, bool b) const
+        {
+            os << std::boolalpha << b;
+        }
+    };
+    
+    template<>
+    struct printer<int>
+    {
+        void operator()(std::ostream& os, int const& v) const
+        {
+            os << v;
+        }
+    };
+    
     
     template<class T>
     struct printer_call
@@ -14,7 +108,7 @@ namespace value { namespace debug {
         auto operator()(std::ostream& os) const
         -> std::ostream&
         {
-            printer<std::decay_t<T>>()(os, _t);
+            printer<T>()(os, _t);
             return os;
         }
         
@@ -33,94 +127,36 @@ namespace value { namespace debug {
         return printer_call<T> { t };
     }
     
-    
-    
-    
-    
-    
-    template<>
-    struct printer<bool>
-    {
-        void operator()(std::ostream& os, bool b) const
+    namespace detail {
+        template<class T>
+        struct is_printable
         {
-            os << std::boolalpha << b;
-        }
-    };
+            template<class U> static auto test(const U*p)
+            -> decltype(std::declval<printer<T>>()(std::declval<std::ostream&>(), *p), void(), std::true_type());
+            
+            template<class U> static auto test(...) -> decltype(std::false_type());
+            using type = decltype(test<T>(nullptr));
+            static constexpr bool value = type::value;
+        };
+    }
+    template<class T> using is_printable = typename detail::is_printable<T>::type;
+    
     
     template<class T>
-    struct printer<T, std::enable_if_t< std::is_arithmetic<T>::value >>
+    struct printer<T*>
     {
-        void operator()(std::ostream& os, T const& t) const
-        {
-            os << t;
-        }
-    };
-    
-    template<class T>
-    struct has_ostream
-    {
-        template<class U> static auto test(const U* p) -> decltype((std::declval<std::ostream>() << (*p)), void(), std::true_type());
-        template<class U> static auto test(...) -> decltype(std::false_type());
-        using type = decltype(test<T>(0));
-        static constexpr bool value = type::value;
-    };
-    template<class T> static constexpr bool HasOStream = has_ostream<T>::value;
-    
-    template<class T>
-    struct has_as_object {
-        template<class U> static auto test(const U*p) -> decltype(as_object(*p), void(), std::true_type());
-        template<class U> static auto test(...) -> decltype(std::false_type());
-        using type = decltype(test<T>(nullptr));
-        static constexpr bool value = type::value;
-    };
-    template<class T> using has_as_object_t = typename has_as_object<T>::type;
-    template<class T> static constexpr bool HasAsObject = has_as_object<T>::value;
-    
-    template<class T>
-    struct printable {
-        template<class U> static auto test(const U*p) -> decltype(print(*p), void(), std::true_type());
-        template<class U> static auto test(...) -> decltype(std::false_type());
-        using type = decltype(test<T>(nullptr));
-        static constexpr bool value = type::value;
-    };
-    template<class T> using printable_t = typename printable<T>::type;
-    template<class T> static constexpr bool Printable = has_as_object<T>::value;
-    
-    template<class T>
-    struct printer<T*, std::enable_if_t<Printable<std::decay_t<T>>>>
-    {
-        void operator()(std::ostream& os, T* t) const
+        std::ostream& operator()(std::ostream& os, T* t) const
         {
             if (t)
-                os << print(*t);
+            {
+                printer<T> p;
+                p(os, *t);
+            }
             else
                 os << "null";
+            return os;
         }
     };
-    
-    template<class T>
-    struct printer<T*, std::enable_if_t<not Printable<std::decay_t<T>>>>
-    {
-        void operator()(std::ostream& os, T* t) const
-        {
-            os << t;
-        }
-    };
-    
-    
-    
-    template<class T>
-    struct printer<T, std::enable_if_t<HasAsObject<T>>>
-    {
-        void operator()(std::ostream& os, T const& t) const
-        {
-            os << as_object(t);
-        }
-    };
-    
-    
-    
-    
     
 }}
 
@@ -140,6 +176,16 @@ namespace value { namespace debug {
         }
     };
     
+    template<std::size_t N>
+    struct printer<const char (&)[N]>
+    {
+        void operator()(std::ostream& os,
+                        const char (&s)[N]) const
+        {
+            os << std::quoted(s);
+        }
+    };
+
     template<>
     struct printer<const char*>
     {
@@ -149,6 +195,7 @@ namespace value { namespace debug {
             os << std::quoted(s);
         }
     };
+    
     
 }}
 
@@ -198,16 +245,9 @@ namespace value { namespace debug {
     template<class T>
     struct printer<std::shared_ptr<T>>
     {
-        void operator()(std::ostream& os, const std::shared_ptr<T>& ptr) const
+        decltype(auto) operator()(std::ostream& os, const std::shared_ptr<T>& ptr) const
         {
-            if (auto p = ptr.get())
-            {
-                os << print(*ptr);
-            }
-            else
-            {
-                os << "null";
-            }
+            return printer<T*>()(os, ptr.get());
         }
     };
 }}
