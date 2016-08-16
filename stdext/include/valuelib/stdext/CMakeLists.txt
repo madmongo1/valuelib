@@ -1,4 +1,5 @@
 add_sources(CMakeLists.txt
+    apply.hpp
     byte_buffer.hpp
     exception.hpp
     invoke.hpp

@@ -2,10 +2,13 @@
 
 namespace value { namespace stdext {
     namespace detail {
+        
         template <class T>
         struct is_reference_wrapper : std::false_type {};
+        
         template <class U>
         struct is_reference_wrapper<std::reference_wrapper<U>> : std::true_type {};
+        
         template <class T>
         constexpr bool is_reference_wrapper_v = is_reference_wrapper<T>::value;
         
@@ -25,7 +28,6 @@ namespace value { namespace stdext {
         -> std::enable_if_t<std::is_function<T>::value &&
         is_reference_wrapper_v<std::decay_t<RefWrap>>,
         decltype((ref.get().*pmf)(std::forward<Args>(args)...))>
-        
         {
             return (ref.get().*pmf)(std::forward<Args>(args)...);
         }

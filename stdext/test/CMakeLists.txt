@@ -1,5 +1,6 @@
 add_sources(
-CMakeLists.txt 
+CMakeLists.txt
+invoke.cpp
 shared_string.cpp 
 bind_weak.cpp
 key_iterator.cpp
