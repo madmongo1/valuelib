@@ -263,8 +263,8 @@ namespace detail{
     
     template<size_t N> struct boolean_value;
     template<size_t N> using boolean_value_t = typename boolean_value<N>::type;
-    template<size_t N> constexpr auto to_int(boolean_value_t<N> b) { return static_cast<int>(b); };
-    template<size_t N> constexpr auto to_boolean_value(int i) { return static_cast<boolean_value_t<N>>(i); };
+    template<size_t N> constexpr auto to_int(boolean_value_t<N> b) { return static_cast<int>(b); }
+    template<size_t N> constexpr auto to_boolean_value(int i) { return static_cast<boolean_value_t<N>>(i); }
     
     template<> struct boolean_value<1> {
         enum type { bit0, bit1 };
