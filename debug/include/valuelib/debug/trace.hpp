@@ -533,7 +533,7 @@ namespace value { namespace debug {
  }
  */
 
-#define VALUE_DEBUG_TRACE(module, ...) \
+#define VALUE_DEBUG_TRACE(module) \
 const value::debug::trace_level value_debug_trace_level(tracing_enabled(module)); \
 if (value_debug_trace_level.active()) \
 BOOST_LOG_TRIVIAL(trace) << value_debug_trace_level.get_lead_in()
