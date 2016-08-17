@@ -1,5 +1,6 @@
 add_sources(
 CMakeLists.txt
+bits.cpp
 invoke.cpp
 shared_string.cpp 
 bind_weak.cpp
