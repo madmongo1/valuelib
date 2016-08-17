@@ -20,7 +20,7 @@ namespace value { namespace stdext {
     struct bit_translation
     {
         constexpr bit_translation(int bit, const char* name) : mask(1 << bit), name(name) {}
-        constexpr bit_translation(mask m, const char* name) : mask(m.m), name(name) {}
+        constexpr bit_translation(struct mask m, const char* name) : mask(m.m), name(name) {}
         constexpr bit_translation(bit b, const char* name) : bit_translation(b.n, name) {}
         int mask;
         const char* name;
