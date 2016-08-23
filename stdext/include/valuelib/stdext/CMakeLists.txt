@@ -1,4 +1,5 @@
 add_sources(CMakeLists.txt
+    algorithm.hpp
     apply.hpp
     bits.hpp
     byte_buffer.hpp
