@@ -2,7 +2,7 @@
 project(ValueLib_data)
 
 find_package(Threads)
-find_package(Boost)
+sanity_require(LIBRARY boost VERSION any)
 
 interface_tree(include)
 source_tree(src)

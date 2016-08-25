@@ -1,5 +1,47 @@
-cmake_minimum_required(VERSION 3.4.0)
+# Make sure we're using correct version of CMake
+cmake_minimum_required(VERSION 3.5)
+
+# Check if we're a subproject with a parent and add prequisites if not
+get_directory_property(hasParent PARENT_DIRECTORY)
+if(NOT hasParent)
+    include (CheckCXXCompilerFlag)
+    enable_testing()
+    include(sanity/cmake/sanity.cmake)
+endif()
+
 project(ValueLib)
+
+#
+# c++ version
+#
+
+if (NOT CMAKE_CXX_STANDARD)
+    set (CMAKE_REQUIRED_QUIET FALSE)
+    
+    CHECK_CXX_COMPILER_FLAG(-std=c++17 supports17)
+    CHECK_CXX_COMPILER_FLAG(-std=c++14 supports14)
+    CHECK_CXX_COMPILER_FLAG(-std=c++11 supports11)
+    if (supports17)
+        set (CMAKE_CXX_STANDARD "14")
+    elseif (supports14)
+        set (CMAKE_CXX_STANDARD "14")
+    elseif (supports11)
+        set (CMAKE_CXX_STANDARD "11")
+    else ()
+        message (FATAL_ERROR "here's a nickel kid, go buy yourself a better compiler")
+    endif ()
+    set_property (GLOBAL PROPERTY CXX_STANDARD ${CMAKE_CXX_STANDARD})
+    set (CMAKE_CXX_STANDARD ${CMAKE_CXX_STANDARD} CACHE STRING "best complete standard supported by the compiler")
+endif ()
+
+
+
+#
+# Libraries
+#
+
+sanity_require(LIBRARY boost VERSION any)
+sanity_require(LIBRARY gtest VERSION any)
 
 set(ValueLib_Folder_Prefix)
 if (NOT CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
@@ -8,13 +50,6 @@ endif()
 
 enable_testing()
 
-if (NOT Boost_INCLUDE_DIR)
-	find_package(Boost 1.59)
-endif()
-
-find_package(GTest)
-
-include(cmake/add_sources.cmake)
 add_subdirectory(debug)
 add_subdirectory(immutable)
 add_subdirectory(tuple)
