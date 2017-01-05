@@ -8,7 +8,9 @@ source_tree(src)
 test_tree(test)
 
 add_library(ValueLib_debug ${INTERFACE_FILES} ${SOURCE_FILES})
-target_include_directories(ValueLib_debug 
+target_link_libraries(ValueLib_debug sanity::boost)
+
+target_include_directories(ValueLib_debug
 SYSTEM PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -17,8 +19,6 @@ PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${CMAKE_CURRENT_BINARY_DIR}/include
 	${CMAKE_CURRENT_BINARY_DIR}/src
-SYSTEM PRIVATE
-        ${Boost_INCLUDE_DIR}
 )
 
 install(

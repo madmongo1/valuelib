@@ -5,6 +5,7 @@
 //  Created by Richard Hodges on 04/03/2016.
 //
 //
+#include <boost/config.hpp>
 #include <valuelib/data/uuid.hpp>
 #include <boost/lexical_cast.hpp>
 
