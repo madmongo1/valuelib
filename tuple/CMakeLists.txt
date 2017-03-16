@@ -47,7 +47,7 @@ find_package(GTest)
 if(GTEST_FOUND)
 	include_directories(BEFORE SYSTEM ${GTEST_INCLUDE_DIRS})
 	add_executable("${sub_library}_test" ${TEST_FILES})
-	target_link_libraries("${sub_library}_test" ${sub_library}
+	target_link_libraries("${sub_library}_test" "${sub_library}"
 			${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 	add_test(NAME "test_${sub_library}" COMMAND ${CMAKE_CURRENT_BINARY_DIR}/"${sub_library}_test")
 endif()

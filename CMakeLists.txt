@@ -10,6 +10,7 @@ project(ValueLib)
 #
 
 if (NOT CMAKE_CXX_STANDARD)
+	include(CheckCXXCompilerFlag)
     set (CMAKE_REQUIRED_QUIET FALSE)
     
     CHECK_CXX_COMPILER_FLAG(-std=c++17 supports17)

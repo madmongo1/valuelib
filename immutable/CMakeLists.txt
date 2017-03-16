@@ -1,5 +1,5 @@
 set(sub_library "ValueLib_immutable")
-set(dependencies "ValueLib_debug")
+set(dependencies ValueLib_debug)
 project("${sub_library}")
 
 find_package(Threads)

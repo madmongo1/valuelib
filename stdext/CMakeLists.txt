@@ -1,5 +1,5 @@
 set(sub_library "ValueLib_stdext")
-set(dependencies "ValueLib_tuple ValueLib_debug")
+set(dependencies ValueLib_tuple ValueLib_debug)
 project("${sub_library}")
 
 find_package(Threads)
@@ -12,7 +12,7 @@ prefix_files(LIB_PRIVATE PREFIX "include/valuelib/stdext" APPEND PRIVATE_INTERFA
         light_future.hpp shared_string.hpp string_algorithm.hpp string_traits.hpp unique_ptr.hpp)
 
 prefix_files(SRC PREFIX "src" APPEND SOURCE_FILES FILES
-        noddy.cpp)
+        dummy.cpp)
 
 prefix_files(TEST PREFIX "test" APPEND TEST_FILES FILES
         bind_weak.cpp bits.cpp invoke.cpp key_iterator.cpp light_future.cpp shared_string.cpp unique_ptr.cpp)
