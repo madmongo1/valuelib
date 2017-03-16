@@ -1,47 +1,55 @@
-
-project(ValueLib_tuple)
+set(sub_library "ValueLib_tuple")
+set(dependencies ValueLib_immutable ValueLib_debug)
+project("${sub_library}")
 
 find_package(Threads)
+find_package(Boost REQUIRED)
 
-interface_tree(include)
-source_tree(src)
-test_tree(test)
+set(PUBLIC_INTERFACE)
+set(PRIVATE_INTERFACE)
+prefix_files(LIB_PRIVATE PREFIX "include/valuelib/tuple" APPEND PRIVATE_INTERFACE FILES
+		algorithm.hpp metafunction.hpp print.hpp)
 
-add_library(ValueLib_tuple ${INTERFACE_FILES} ${SOURCE_FILES})
-target_link_libraries(ValueLib_tuple ValueLib_immutable ValueLib_debug)
+prefix_files(SRC PREFIX "src" APPEND SOURCE_FILES FILES
+		noddy.cpp)
 
-target_include_directories(ValueLib_tuple
-SYSTEM PUBLIC
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-	$<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${Boost_INCLUDE_DIR}>
-PRIVATE
-	${CMAKE_CURRENT_SOURCE_DIR}/include
-	${CMAKE_CURRENT_BINARY_DIR}/include
-	${CMAKE_CURRENT_BINARY_DIR}/src
-)
+prefix_files(TEST PREFIX "test" APPEND TEST_FILES FILES
+		test_algorithm.cpp test_tuple_print.cpp)
 
-install(
-    EXPORT "ValueLib_tuple"
-    DESTINATION "lib"
-)
+add_library(${sub_library} ${PUBLIC_INTERFACE} ${PRIVATE_INTERFACE} ${SOURCE_FILES})
+target_link_libraries(${sub_library} PUBLIC ${dependencies})
+target_link_libraries(${sub_library} INTERFACE ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_include_directories(${sub_library} SYSTEM INTERFACE ${Boost_DIRECTORIES})
 
-install(
-    TARGETS ValueLib_tuple
-    EXPORT "ValueLib_tuple"
-    LIBRARY DESTINATION "lib"
-    ARCHIVE DESTINATION "lib"
-    RUNTIME DESTINATION "bin"
-    INCLUDES DESTINATION "include")
+target_include_directories(${sub_library}
+		SYSTEM PUBLIC
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+		$<INSTALL_INTERFACE:include>
+		PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/include
+		${CMAKE_CURRENT_BINARY_DIR}/include
+		${CMAKE_CURRENT_BINARY_DIR}/src
+		)
+
+install(EXPORT "${sub_library}"
+		DESTINATION "lib")
+
+install(TARGETS ${sub_library}
+		EXPORT "${sub_library}"
+		LIBRARY DESTINATION "lib"
+		ARCHIVE DESTINATION "lib"
+		RUNTIME DESTINATION "bin"
+		INCLUDES DESTINATION "include")
 
 find_package(GTest)
 
 if(GTEST_FOUND)
-    include_directories(BEFORE SYSTEM ${GTEST_INCLUDE_DIRS})
-	add_executable(ValueLib_tuple_test ${TEST_FILES})
-	target_link_libraries(ValueLib_tuple_test ValueLib_tuple ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-    add_test(NAME test_all_tuple COMMAND ${CMAKE_CURRENT_BINARY_DIR}/ValueLib_tuple_test)
+	include_directories(BEFORE SYSTEM ${GTEST_INCLUDE_DIRS})
+	add_executable("${sub_library}_test" ${TEST_FILES})
+	target_link_libraries("${sub_library}_test" ${sub_library}
+			${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+	add_test(NAME "test_${sub_library}" COMMAND ${CMAKE_CURRENT_BINARY_DIR}/"${sub_library}_test")
 endif()
 
 

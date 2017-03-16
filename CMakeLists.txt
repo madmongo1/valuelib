@@ -2,12 +2,6 @@
 cmake_minimum_required(VERSION 3.5)
 
 # Check if we're a subproject with a parent and add prequisites if not
-get_directory_property(hasParent PARENT_DIRECTORY)
-if(NOT hasParent)
-    include (CheckCXXCompilerFlag)
-    enable_testing()
-    include(sanity/cmake/sanity.cmake)
-endif()
 
 project(ValueLib)
 
@@ -35,13 +29,41 @@ if (NOT CMAKE_CXX_STANDARD)
 endif ()
 
 
+#
+# utilities
+#
+
+function(prefix_files outvar)
+	set(options)
+	set(oneValueArgs PREFIX APPEND)
+	set(multiValueArgs FILES)
+	cmake_parse_arguments(ARG "${options}"
+			"${oneValueArgs}" "${multiValueArgs}"
+			${ARGN})
+	if (NOT ARG_PREFIX)
+		message(FATAL_ERROR "prefix_files - no PREFIX set")
+	endif ()
+
+	set(result)
+	foreach (file ${ARG_FILES})
+		set(prefixed_file "${ARG_PREFIX}/${file}")
+		list(APPEND result "${prefixed_file}")
+	endforeach ()
+	set("${outvar}" "${result}" PARENT_SCOPE)
+	if (ARG_APPEND)
+		set(append_list "${${ARG_APPEND}}")
+		list(APPEND append_list ${result})
+		set("${ARG_APPEND}" "${append_list}" PARENT_SCOPE)
+	endif ()
+endfunction()
+
 
 #
 # Libraries
 #
 
-sanity_require(LIBRARY boost VERSION any)
-sanity_require(LIBRARY gtest VERSION any)
+find_package(Boost REQUIRED)
+find_package(GTest)
 
 set(ValueLib_Folder_Prefix)
 if (NOT CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
