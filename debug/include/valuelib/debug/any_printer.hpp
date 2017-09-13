@@ -4,6 +4,7 @@
 #include <iostream>
 #include <memory>
 #include <typeindex>
+#include <functional>
 
 namespace value { namespace debug {
 
